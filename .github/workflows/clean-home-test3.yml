@@ -68,8 +68,11 @@ jobs:
           grep -q "android.intent.category.HOME" launcher-manifest-tree.txt
           grep -q "android.intent.category.LAUNCHER" launcher-manifest-tree.txt
           grep -q "android.intent.category.LEANBACK_LAUNCHER" launcher-manifest-tree.txt
-          grep -q "tendoo_icon" launcher-badging.txt
-          echo "Verified HOME + LAUNCHER + LEANBACK_LAUNCHER + visible icon."
+          # R8 shortens drawable resource filenames (e.g. res/6h.xml).
+          # Validate the actual published icon/banner entries, not the source filename.
+          grep -E -q "^launchable-activity:.*icon='res/" launcher-badging.txt
+          grep -E -q "^leanback-launchable-activity:.*banner='res/" launcher-badging.txt
+          echo "Verified HOME + LAUNCHER + LEANBACK_LAUNCHER and packaged icon/banner."
       - name: Copy and checksum APK
         run: |
           cp launcher/app/build/outputs/apk/release/app-release.apk Tendoo-IPTV-Home-1.0.0-test3.apk
