@@ -1,0 +1,27 @@
+name: Check Vietnam IPTV stream manifests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/check_streams.py'
+      - '.github/workflows/check-streams.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe M3U8 playlists (without editing owner's IPTV list)
+        run: python3 scripts/check_streams.py | tee iptv-health-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPTV-manifest-health-report
+          path: |
+            iptv-health-report.json
+            iptv-health-report.txt
+          retention-days: 7
