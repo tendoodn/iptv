@@ -376,7 +376,7 @@ public final class TendooHomeActivity extends Activity {
             if (isFinishing() || isDestroyed()) return;
             channels = TendooPlaylist.load(this);
             channelPage = 0;
-            adapter.notifyItemRangeChanged(12, 12);
+            adapter.notifyItemRangeChanged(appSlots(), appSlots());
             if (requested) Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
         });
     }
