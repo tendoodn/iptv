@@ -1,87 +1,56 @@
 # Tendoo IPTV Home 📺
 
-## Phiên bản 1.0.0.test3 — icon hiển thị và chọn HOME mặc định (17/11/2026)
+Android TV HOME launcher dùng **giao diện và mã nguồn CleanYourTV của anh** tại [tendoodn/cleanyourtv](https://github.com/tendoodn/cleanyourtv), bổ sung ứng dụng tùy chỉnh và truyền hình IPTV Việt Nam.
 
-- **[Tải APK 1.0.0.test3](https://github.com/tendoodn/iptv/releases/download/iptv-v1.0.0-test3/Tendoo-IPTV-Home-1.0.0-test3.apk)** — 1.263.949 byte, R8-optimized, debug-signed test build.
-- Đã kiểm tra trực tiếp bằng Android aapt: ứng dụng có ba intent `HOME`, `LAUNCHER`, `LEANBACK_LAUNCHER`, với icon + banner được đóng gói trong APK.
-- Khi mở lần đầu, ứng dụng đề nghị chọn Tendoo IPTV Home làm HOME. Nút **ĐẶT LÀM HOME** nằm trên thanh phía trên, dùng **RoleManager** trên Android 10+ hoặc mở Home settings nếu thiết bị không hỗ trợ role picker.
-- Việc đổi HOME **yêu cầu người dùng chấp thuận trên thiết bị**. Không root, không tự tắt hay gỡ launcher hệ thống. Một số TV Box khóa quyền đổi HOME trong firmware.
-- Nếu TV Box vẫn ẩn icon, vào **Cài đặt → Ứng dụng → Tất cả ứng dụng → Tendoo IPTV Home → Mở** để vào ứng dụng, sau đó bấm **ĐẶT LÀM HOME**. Nếu không có tùy chọn, thiết bị có thể chặn launcher ngoài.
-- Bản test2 → test3 có thể cần **gỡ test2 rồi cài test3** do chữ ký debug test khác nhau. Đây là bản kiểm thử, chưa có QA bằng remote trên TV Box thật.
+## Phiên bản hiện tại: 1.0.0.test4
 
+**[Tải Tendoo-IPTV-Home-1.0.0-test4.apk](https://github.com/tendoodn/iptv/releases/download/iptv-v1.0.0-test4/Tendoo-IPTV-Home-1.0.0-test4.apk)** · [GitHub Release](https://github.com/tendoodn/iptv/releases/tag/iptv-v1.0.0-test4)
 
-**Launcher Android TV siêu gọn + trình phát IPTV Việt Nam tích hợp**, phát triển độc lập dựa trên các nguyên tắc tối giản của [CleanYourTV (fork của anh)](https://github.com/tendoodn/cleanyourtv). Không tích hợp thư viện UI, WebView, quảng cáo, analytics, dịch vụ nền hay bộ máy Chromium.
+- **Biên dịch trực tiếp trên Vercel Sandbox**, không biên dịch APK bằng GitHub Actions.
+- Kích thước: **1.962.828 byte** (~1,96 MB).
+- SHA-256: `60be6ba3da0070f32a6736d802cb4aac468650f8e00fe32c034d4df46edef4b6`.
+- Package: `vn.tendoo.iptv`. Android 8.0/API 26 trở lên. Khóa ký debug thử nghiệm.
+- Đã kiểm tra APK bằng `aapt`: icon, Android TV banner, các intent `HOME`, `LAUNCHER`, `LEANBACK_LAUNCHER` và 46 logo nằm trong tài nguyên ứng dụng.
 
-## Bố cục cố định 4 hàng
+## Giao diện CleanYourTV
 
-- **Hàng 1–2 (12 ô):** mặc định có **IPTV Việt Nam** và dấu **+**. Tự chọn ứng dụng đã cài trên máy; tối đa **11 ứng dụng ghim + 1 ô thêm**, mỗi hàng tối đa 6 ô. Giữ OK trên ô, hoặc bấm MENU / Quản lý để **chọn vị trí**, chuyển trái/phải hoặc **gỡ khỏi màn hình** (không gỡ APK của ứng dụng).
-- **Hàng 3–4 (12 ô):** kênh TV xem nhanh; bấm bằng remote để phát. Dùng nút ◀ ▶ để chuyển trang danh sách.
-- **Màn hình IPTV:** danh sách kênh theo nhóm, nút đồng bộ từ GitHub; phát trực tiếp qua **Android MediaPlayer + SurfaceView**, không cần trình phát ngoài.
-- **Đổi kênh:** trong khi phát, nhấn CH+/CH− hoặc ↑/↓. Nhấn BACK để quay lại.
+Giao diện sử dụng bố cục `launcher/app/src/main/res/layout/activity_main.xml`, font Outfit, đồng hồ/ngày tháng, thanh nguồn vào/mạng/cài đặt, thẻ ứng dụng banner thật và khung dock bo tròn từ mã nguồn CleanYourTV của anh. Nền đỏ–đen tĩnh được bổ sung để gần với ảnh TV tham chiếu mà không dùng hiệu ứng blur nặng.
 
-## Link playlist cố định
+- **Hàng 1–2:** ứng dụng do người dùng thêm, mặc định có **IPTV Việt Nam** và dấu **+**. Giữ OK/Menu hoặc chọn quản lý để sắp xếp, chuyển vị trí hoặc gỡ shortcut (không gỡ APK).
+- **Hàng 3–4:** kênh xem nhanh hiển thị **logo kênh thật** (không phải tên chữ), chạm OK để phát; tên hiện khi focus. Đã đóng gói **46 logo** vào APK, tải offline ngay khi khởi động.
+- **Mặc định 5 ô/hàng**, giống TV trong ảnh; vào Quản lý → **Số cột mỗi hàng** để chọn 6 ô/hàng. Bố cục vẫn gồm 4 hàng.
+- Có màn hình toàn bộ kênh theo nhóm và điều khiển đổi kênh bằng remote.
 
-**[https://raw.githubusercontent.com/tendoodn/iptv/main/playlist/vietnam.m3u](https://raw.githubusercontent.com/tendoodn/iptv/main/playlist/vietnam.m3u)**
+## Playlist riêng — cập nhật không cần build APK
 
-Sửa file [playlist/vietnam.m3u](playlist/vietnam.m3u) trong repo GitHub rồi Commit vào nhánh **main**. Launcher tự đồng bộ khi vào Home nếu đã quá **4 giờ** từ lần kiểm tra trước, hoặc anh bấm nút **↻** để cập nhật ngay. Danh sách đã tải được lưu trên thiết bị, khi mạng lỗi vẫn có playlist cũ và playlist đi kèm APK làm phương án dự phòng.
+- **[Sửa playlist M3U tại GitHub](https://github.com/tendoodn/iptv/edit/main/playlist/vietnam.m3u)**
+- **[Link M3U ổn định](https://raw.githubusercontent.com/tendoodn/iptv/main/playlist/vietnam.m3u)**
 
-M3U mẫu chứa 46 nguồn kênh Việt Nam công khai, một số luồng có thể ngừng hoạt động, giới hạn vùng hoặc phụ thuộc máy chủ bên thứ ba. **Chưa có xác nhận phát được từng kênh trên TV thật.**
+Ứng dụng kiểm tra danh sách mới theo chu kỳ khoảng 4 giờ khi vào Home; có tùy chọn đồng bộ thủ công. Có bản sao M3U để dùng khi mất mạng.
 
-## APK test
+Mỗi kênh có thể khai báo `tvg-id` và `tvg-logo`. Logo 46 kênh đi kèm APK để hiện ngay; kênh mới thêm có thể tải hình theo `tvg-logo` và lưu cache. Nếu thay logo cố định đã đóng gói, cần build bản APK mới để thay bản offline.
 
-- Xem [GitHub Actions → Build lightweight IPTV Home APK](../../actions/workflows/android-apk.yml).
-- Sau khi build thành công, tải artifact `Tendoo-IPTV-Home-1.0.0-test1` hoặc xem [Releases](../../releases).
-- Đó là APK **release đã tối ưu R8 nhưng ký bằng khóa debug tạm thời để kiểm thử**, chưa phải bản phát hành production. Mỗi môi trường build có thể có khóa debug khác nhau; trước khi cập nhật lâu dài cần cấu hình khóa ký ổn định.
-- Tương thích mục tiêu: **Android 6.0+**, có hỗ trợ HOME intent. Không chạy trên Tizen/webOS.
+Trình phát sử dụng **Media3 ExoPlayer + HLS**, hỗ trợ thử URL dự phòng cùng kênh; **chưa có kiểm chứng video phát trên TV Box thật**. Nguồn IPTV công khai có thể thay đổi, giới hạn vùng, yêu cầu cookie hoặc ngừng hoạt động. Việc HTTP trả manifest không bảo đảm phát được video.
 
-## Cài làm launcher mặc định
+## Đặt làm màn hình HOME mặc định
 
-1. Cài APK trên Android TV/Google TV hoặc TV Box.
-2. Mở Tendoo IPTV Home từ danh sách ứng dụng.
-3. Bấm **Quản lý → Cài làm launcher mặc định** hoặc nhấn nút **HOME** và chọn Tendoo IPTV Home → **Luôn dùng**.
-4. Một số firmware chặn launcher bên thứ ba; khi đó có thể cần cấu hình ADB riêng theo model. **Không tự động vô hiệu hóa hay xóa launcher gốc.**
+1. Cài bản test4 trên Android TV hoặc TV Box Android 8.0+.
+2. Mở **Tendoo IPTV Home** từ danh sách ứng dụng.
+3. Chọn đổi ứng dụng HOME bằng hộp thoại Android hoặc vào **Quản lý → Cài đặt HOME mặc định**. Một số TV firmware khóa việc đổi HOME.
+4. Nhấn HOME trên remote để xác minh. Giữ launcher gốc để có thể chuyển lại.
 
-Nếu cần khôi phục, vào **Cài đặt → Ứng dụng mặc định → Ứng dụng Home**, chọn launcher trước đó. Tránh dùng debloat/disable cho TV chưa xác minh tên package hệ thống.
+Nếu bị lỗi chữ ký khi cài đè bản test3, cần gỡ bản thử cũ trước; điều này sẽ xóa các shortcut cá nhân lưu trong ứng dụng. Không root hoặc vô hiệu hóa launcher gốc.
 
-## Build ở máy có Android SDK
+## Mã nguồn và quy trình build
 
-Yêu cầu **JDK 17, Android SDK platform 35, Gradle 8.9**.
+- `launcher/` — **toàn bộ mã nguồn/resources CleanYourTV gốc** được đồng bộ từ repo của anh và tích hợp patch.
+- `custom/java/` — phần HOME 4 hàng, trình phát IPTV, trình duyệt kênh và bộ nhớ logo.
+- `custom/logo_pack.json` — dữ liệu nén 46 logo đài truyền hình đóng gói offline.
+- `custom/logo_provenance.json` — nguồn ảnh từng kênh.
+- `playlist/vietnam.m3u` — playlist riêng có metadata logo, cập nhật từ GitHub.
+- `custom/vendor_patch.py` — tạo mã Android từ CleanYourTV và patch tùy chỉnh.
+- `scripts/build-vercel-apk.sh` — **đóng APK Android thật bên trong Vercel Sandbox** với JDK 17, Android SDK 35 và Gradle.
+- `.github/workflows/sync-cleanyourtv-ui.yml` — chỉ đồng bộ mã nguồn lên repo, không build APK.
+- `.github/workflows/publish-vercel-test4.yml` — chỉ đưa **đúng file APK đã build trên Vercel** lên GitHub Releases, có kiểm tra SHA-256; không build lại.
 
-```sh
-gradle --no-daemon :app:assembleRelease
-# APK: app/build/outputs/apk/release/app-release.apk
-```
-
-Không có runtime dependency bên thứ ba nên không kéo các bộ thư viện AndroidX/Compose/Flutter/Media3 vào APK. Bản build test phát hành dùng R8/minify và shrinkResources để giảm kích thước. Trình phát native có kích thước nhỏ nhưng độ tương thích HLS có thể khác nhau giữa các hãng, nhất là kênh mã hóa DRM, cookie/token hoặc codec đặc thù.
-
-### Cấu trúc
-
-```
-app/src/main/java/vn/tendoo/iptv/
-  HomeActivity.java       # Launcher 4 hàng
-  ChannelsActivity.java   # Danh sách kênh
-  PlayerActivity.java     # Bộ phát HLS native
-  Playlist.java           # Parser M3U, đồng bộ và cache
-  Ui.java                 # UI điều khiển bằng remote
-playlist/vietnam.m3u      # Chỉnh trên GitHub không cần rebuild
-.github/workflows/android-apk.yml
-```
-
-**Tham khảo:** [tendoodn/cleanyourtv](https://github.com/tendoodn/cleanyourtv) (fork từ [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv), MIT). Phần mã nguồn của Tendoo IPTV Home được viết mới, không sao chép mã gốc.
-
-
----
-
-## Bản giao diện mới — 1.0.0.test2 (17/11/2026)
-
-**[TẢI APK test2](https://github.com/tendoodn/iptv/releases/download/iptv-v1.0.0-test2/Tendoo-IPTV-Home-1.0.0-test2.apk)** · [GitHub Release](https://github.com/tendoodn/iptv/releases/tag/iptv-v1.0.0-test2)
-
-- **Nền giao diện chính là CleanYourTV trong repo của anh:** nguyên layout `activity_main.xml`, font Outfit, tài nguyên UI, thanh clock/date, thanh top pill và kiểu ứng dụng tvOS; mã và tài nguyên được vendor dưới `launcher/`, giữ bản quyền trong `CLEAN_YOUR_TV_LICENSE.txt`.
-- `custom/java/`: `TendooHomeActivity` và `TendooTileAdapter` thay nội dung màn hình bằng **2 hàng ứng dụng + 2 hàng kênh**, tối đa 6 ô/hàng. Mặc định ô IPTV và dấu +; có chọn, sắp xếp, gỡ shortcut mà không gỡ app.
-- `TendooPlayerActivity`: ExoPlayer + Media3 HLS phát thích ứng, thử nguồn dự phòng `iptv-org` cùng kênh nếu nguồn chính lỗi. Khi đang xem nhấn CH± để chuyển kênh.
-- Danh sách riêng do anh chỉnh tại **https://github.com/tendoodn/iptv/edit/main/playlist/vietnam.m3u**. URL tải cố định là **https://raw.githubusercontent.com/tendoodn/iptv/main/playlist/vietnam.m3u**. Tự kiểm tra khoảng 4 giờ và có thao tác cập nhật thủ công.
-- [Báo cáo thử HTTP manifest HLS](https://github.com/tendoodn/iptv/actions/workflows/check-streams.yml): kiểm tra từ GitHub Actions, không phải phát thử trên TV. Một số kênh 403/giới hạn vùng và link chuyển tiếp có thể lỗi.
-
-**Yêu cầu máy:** dựa trên CleanYourTV, **Android TV 8.0 trở lên**. APK test2 dùng cùng package `vn.tendoo.iptv` với test1 nhưng khóa debug có thể khác, nếu báo lỗi cập nhật hãy gỡ bản test1 và cài test2. Không root và không xóa launcher gốc. Để đổi launcher, nhấn Home chọn Tendoo IPTV Home → Luôn dùng nếu firmware cho phép.
-
-**APK đã build thành công**, có chữ ký debug thử nghiệm; chưa xác minh phát thực tế trên TV Box nên không cam kết mọi kênh phát được. APK ≈1.27 MB.
+Vercel project: `tendoo-iptv-apk-build`. APK thử nghiệm chưa được nghiệm thu trực tiếp trên thiết bị người dùng. Giấy phép nguồn gốc CleanYourTV lưu tại `CLEAN_YOUR_TV_LICENSE.txt`.
