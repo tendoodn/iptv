@@ -35,8 +35,11 @@ import java.util.Set;
 /** Original CleanYourTV visuals/resources, with a purpose-built 6x4 app and IPTV layout. */
 public final class TendooHomeActivity extends Activity {
     static final String IPTV = "@iptv";
-    static final int COLUMNS = 6;
-    static final int PIN_LIMIT = 11; // permanent + slot is always visible in the first two rows
+    // Owner's CleanYourTV reference has five tiles across. Six is optional.
+    private int columns = 5;
+    int columns() { return columns; }
+    int appSlots() { return columns * 2; }
+    int maxPins() { return appSlots() - 1; }
 
     private SharedPreferences prefs;
     private RecyclerView grid;
@@ -94,22 +97,23 @@ public final class TendooHomeActivity extends Activity {
         settings.setOnLongClickListener(v -> { manage(); return true; });
 
         prefs = getSharedPreferences("iptv-home-layout-v2", MODE_PRIVATE);
+        columns = Math.max(5, Math.min(6, prefs.getInt("columns", 5)));
         pinned = loadPins();
         channels = TendooPlaylist.load(this);
 
         grid = findViewById(R.id.grid);
         grid.setClipToPadding(false);
         grid.setPadding(0, dp(62), 0, dp(12));
-        grid.setLayoutManager(new GridLayoutManager(this, COLUMNS));
+        grid.setLayoutManager(new GridLayoutManager(this, columns));
         // The original CleanYourTV translucent rounded band behind the pinned dock.
-        grid.addItemDecoration(new DockDecoration(COLUMNS,
+        grid.addItemDecoration(new DockDecoration(columns,
                 getResources().getDisplayMetrics().density, true));
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
         adapter = new TendooTileAdapter(this);
         grid.setAdapter(adapter);
         TendooLogoCache.preload(this, () -> {
-            if (!isDestroyed() && !isFinishing()) adapter.notifyItemRangeChanged(12, 12);
+            if (!isDestroyed() && !isFinishing()) adapter.notifyItemRangeChanged(appSlots(), appSlots());
         });
         grid.post(() -> {
             if (grid.getChildCount() > 0) {
@@ -145,7 +149,7 @@ public final class TendooHomeActivity extends Activity {
             JSONArray a = new JSONArray(raw);
             for (int i = 0; i < a.length(); i++) {
                 String p = a.optString(i, "");
-                if (!p.isEmpty() && !values.contains(p) && values.size() < PIN_LIMIT) values.add(p);
+                if (!p.isEmpty() && !values.contains(p) && values.size() < maxPins()) values.add(p);
             }
         } catch (Exception ex) {
             values.add(IPTV);
@@ -261,7 +265,7 @@ public final class TendooHomeActivity extends Activity {
         TendooPlayerActivity.open(this, channel);
     }
     void chooseApp() {
-        if (pinned.size() >= PIN_LIMIT) {
+        if (pinned.size() >= maxPins()) {
             Toast.makeText(this, "Hàng 1–2 đã đầy: gỡ một ô trước.", Toast.LENGTH_LONG).show();
             return;
         }
@@ -288,7 +292,7 @@ public final class TendooHomeActivity extends Activity {
         new AlertDialog.Builder(this).setTitle("THÊM ỨNG DỤNG")
                 .setItems(labels, (d, i) -> {
                     String pkg = available.get(i);
-                    if (!pinned.contains(pkg) && pinned.size() < PIN_LIMIT) {
+                    if (!pinned.contains(pkg) && pinned.size() < maxPins()) {
                         pinned.add(pkg);
                         save();
                     }
@@ -323,8 +327,9 @@ public final class TendooHomeActivity extends Activity {
     void manage() {
         new AlertDialog.Builder(this).setTitle("TÙY CHỈNH MÀN HÌNH CHÍNH")
                 .setItems(new String[]{"Thêm ứng dụng", "Sắp xếp / gỡ ứng dụng",
-                        "Xem tất cả kênh", "12 kênh tiếp theo", "12 kênh trước",
-                        "Cập nhật IPTV từ GitHub", "Cài đặt HOME mặc định"},
+                        "Xem tất cả kênh", "Kênh tiếp theo", "Kênh trước",
+                        "Cập nhật IPTV từ GitHub", "Cài đặt HOME mặc định",
+                        "Số cột mỗi hàng (5 / 6)"},
                         (dialog, option) -> {
                             switch (option) {
                                 case 0: chooseApp(); break;
@@ -334,10 +339,24 @@ public final class TendooHomeActivity extends Activity {
                                 case 4: turnPage(-1); break;
                                 case 5: sync(true); break;
                                 case 6: requestDefaultHome(); break;
+                                case 7: changeColumnCount(); break;
                                 default: break;
                             }
                         }).show();
     }
+    private void changeColumnCount() {
+        new AlertDialog.Builder(this).setTitle("SỐ Ô MỖI HÀNG")
+            .setSingleChoiceItems(new String[]{"5 ô — giống TV trong ảnh", "6 ô — nhiều ứng dụng hơn"},
+                columns == 5 ? 0 : 1, (dialog, which) -> {
+                    int next = which == 0 ? 5 : 6;
+                    dialog.dismiss();
+                    if (next != columns) {
+                        prefs.edit().putInt("columns", next).apply();
+                        recreate();
+                    }
+                }).setNegativeButton("Đóng", null).show();
+    }
+
     private void chooseEdit() {
         String[] choices = new String[pinned.size()];
         for (int i = 0; i < choices.length; i++) choices[i] = appName(pinned.get(i));
@@ -345,9 +364,9 @@ public final class TendooHomeActivity extends Activity {
                 .setItems(choices, (d, n) -> editApp(pinned.get(n))).show();
     }
     private void turnPage(int step) {
-        int pages = Math.max(1, (channels.size() + 11) / 12);
+        int pages = Math.max(1, (channels.size() + appSlots() - 1) / appSlots());
         channelPage = (channelPage + step + pages) % pages;
-        adapter.notifyItemRangeChanged(12, 12);
+        adapter.notifyItemRangeChanged(appSlots(), appSlots());
         Toast.makeText(this, "Kênh xem nhanh: trang " + (channelPage + 1)
                 + "/" + pages, Toast.LENGTH_SHORT).show();
     }
@@ -363,7 +382,7 @@ public final class TendooHomeActivity extends Activity {
     }
     @Override protected void onResume() {
         super.onResume();
-        if (adapter != null) adapter.notifyItemRangeChanged(0, 12);
+        if (adapter != null) adapter.notifyItemRangeChanged(0, appSlots());
     }
     @Override public boolean dispatchKeyEvent(KeyEvent event) {
         if (event.getAction() == KeyEvent.ACTION_DOWN
