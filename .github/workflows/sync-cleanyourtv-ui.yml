@@ -1,0 +1,41 @@
+name: Synchronize authentic CleanYourTV UI source into IPTV repo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'custom/java/**'
+      - 'custom/vendor_patch.py'
+      - 'custom/logo_pack.json'
+      - '.github/workflows/sync-cleanyourtv-ui.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: iptv-vendor-source
+  cancel-in-progress: true
+
+jobs:
+  vendor-source-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy original UI and apply current IPTV patches (no APK build)
+        run: |
+          git clone --quiet --depth 1 --branch main \
+            https://github.com/tendoodn/cleanyourtv.git /tmp/cleanyourtv-base
+          rm -rf launcher
+          cp -a /tmp/cleanyourtv-base/launcher launcher
+          cp /tmp/cleanyourtv-base/LICENSE CLEAN_YOUR_TV_LICENSE.txt
+          python3 custom/vendor_patch.py
+          git add launcher CLEAN_YOUR_TV_LICENSE.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --cached --quiet; then
+            git commit -m 'Synchronize exact CleanYourTV UI and Tendoo IPTV patch sources'
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          fi
