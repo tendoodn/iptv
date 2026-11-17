@@ -31,7 +31,7 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         tileH = Math.max(host.dp(45), Math.min(
                 Math.round(tileW * 101f / 180f),
                 (height - host.dp(171)) / 4 - host.dp(10)));
-        itemH = tileH + host.dp(11);
+        itemH = tileH + host.dp(29);
         setHasStableIds(true);
     }
     @Override public long getItemId(int position) { return position; }
@@ -60,6 +60,11 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         params.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
         card.setLayoutParams(params);
         TextView name = view.findViewById(R.id.name);
+        FrameLayout.LayoutParams nameLp = (FrameLayout.LayoutParams) name.getLayoutParams();
+        nameLp.width = tileW;
+        nameLp.height = host.dp(20);
+        nameLp.topMargin = tileH + host.dp(5);
+        name.setLayoutParams(nameLp);
         name.setVisibility(View.GONE);
         return new Tile(view);
     }
@@ -74,10 +79,14 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
     private void installFocus(Tile h, int baseColor) {
         h.card.setBackground(background(false, baseColor));
         h.card.setOnFocusChangeListener((v, focused) -> {
-            h.card.setBackground(background(focused, focused ? 0xFF3A587A : baseColor));
+            h.card.setBackground(background(focused, focused ? 0xFF384152 : baseColor));
             h.card.animate().scaleX(focused ? 1.075f : 1f)
                     .scaleY(focused ? 1.075f : 1f)
                     .setDuration(115).start();
+            if (h.getBindingAdapterPosition() >= 6) {
+                h.caption.setVisibility(View.VISIBLE);
+                h.caption.animate().alpha(focused ? 1f : 0f).setDuration(105).start();
+            }
         });
     }
     private void bindEmpty(Tile h) {
@@ -97,11 +106,12 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         h.icon.setImageDrawable(null);
         h.icon.setVisibility(View.VISIBLE);
         h.banner.setVisibility(View.GONE);
+        h.banner.setScaleType(ImageView.ScaleType.CENTER_CROP);
         String name;
-        int color = internal ? 0xFF1F5A79 : 0xFF1B2538;
+        int color = internal ? 0xFF1E3945 : 0xFF1C1C1E;
         if (internal) {
             name = "IPTV Việt Nam";
-            h.icon.setImageResource(android.R.drawable.ic_media_play);
+            h.icon.setImageResource(R.drawable.tendoo_icon);
         } else {
             PackageManager pm = host.getPackageManager();
             try {
@@ -118,7 +128,10 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
             }
         }
         h.label.setText(name);
-        h.label.setVisibility(View.VISIBLE);
+        h.label.setVisibility(h.banner.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+        h.caption.setText(name);
+        h.caption.setVisibility(h.getBindingAdapterPosition() >= 6 ? View.VISIBLE : View.GONE);
+        h.caption.setAlpha(0f);
         h.card.setFocusable(true);
         h.card.setOnClickListener(v -> host.openApp(packageName));
         h.card.setOnLongClickListener(v -> { host.editApp(packageName); return true; });
@@ -145,18 +158,30 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         installFocus(h, 0xFF263A56);
     }
     private void bindChannel(Tile h, TendooPlaylist.Channel ch) {
-        h.banner.setVisibility(View.GONE);
-        h.icon.setImageResource(android.R.drawable.ic_media_play);
-        h.icon.setVisibility(View.VISIBLE);
-        h.label.setText(ch.name);
-        h.label.setVisibility(View.VISIBLE);
+        // The two channel rows are LOGO cards, not text labels.
+        // Logos are packaged for offline/instant display and future channels
+        // may fetch their tvg-logo HTTPS URL asynchronously into a disk cache.
+        Drawable logo = TendooLogoCache.drawable(host, ch, () -> {
+            if (!host.isFinishing() && !host.isDestroyed())
+                notifyItemRangeChanged(12, 12);
+        });
+        h.banner.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        h.banner.setImageDrawable(logo);
+        h.banner.setVisibility(logo != null ? View.VISIBLE : View.GONE);
+        h.icon.setVisibility(logo == null ? View.VISIBLE : View.GONE);
+        if (logo == null) h.icon.setImageResource(R.drawable.ic_livetv);
+        h.label.setText("");
+        h.label.setVisibility(View.GONE);
+        h.caption.setText(ch.name);
+        h.caption.setVisibility(View.VISIBLE);
+        h.caption.setAlpha(0f);
         h.card.setFocusable(true);
         h.card.setOnClickListener(v -> host.openChannel(ch));
         h.card.setOnLongClickListener(v -> {
             host.openChannels(); return true;
         });
         h.card.setOnKeyListener(null);
-        installFocus(h, 0xFF233D56);
+        installFocus(h, 0xD01C1C22);
     }
     @Override public void onBindViewHolder(@NonNull Tile h, int position) {
         h.card.animate().cancel();
@@ -168,6 +193,7 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         h.banner.setImageDrawable(null);
         h.icon.setImageDrawable(null);
         h.caption.setVisibility(View.GONE);
+        h.caption.setAlpha(0f);
         if (position < 12) {
             List<String> pinned = host.pins();
             if (position < pinned.size()) bindApp(h, pinned.get(position));
