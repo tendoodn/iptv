@@ -21,6 +21,8 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
+            // Test signing only; provide a stable release keystore before distributing production updates.
+            signingConfig signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
         }
     }
