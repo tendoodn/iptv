@@ -12,6 +12,11 @@ build = root / "launcher/app/build.gradle"
 manifest = root / "launcher/app/src/main/AndroidManifest.xml"
 
 s = build.read_text()
+s = s.replace("compileSdk 34", "compileSdk 35")
+base_gradle = root / "launcher/build.gradle"
+base = base_gradle.read_text()
+assert "8.5.2" in base, "Unexpected upstream Android Gradle Plugin version"
+base_gradle.write_text(base.replace("8.5.2", "8.7.3"))
 s, n = re.subn(r"applicationId providers\.gradleProperty\('launcherApplicationId'\)\.getOrElse\('com\.gathin\.tvhome'\)", "applicationId 'vn.tendoo.iptv'", s)
 assert n == 1, "Cannot find CleanYourTV applicationId"
 s, n = re.subn(r"versionCode\s+6\b", "versionCode 2", s)
