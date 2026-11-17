@@ -1,0 +1,186 @@
+{
+  "VTV1 HD": {
+    "channel_id": "VTV1.vn",
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/Logo_VTV1_-_%C4%90%C3%A0i_Truy%E1%BB%81n_h%C3%ACnh_Vi%E1%BB%87t_Nam.svg/960px-Logo_VTV1_-_%C4%90%C3%A0i_Truy%E1%BB%81n_h%C3%ACnh_Vi%E1%BB%87t_Nam.svg.png"
+  },
+  "VTV2 HD": {
+    "channel_id": "VTV2.vn",
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/VTV2_logo_07-09-2026.png/960px-VTV2_logo_07-09-2026.png"
+  },
+  "VTV3 HD": {
+    "channel_id": "VTV3.vn",
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/VTV3_logo_07-09-2026.png/960px-VTV3_logo_07-09-2026.png"
+  },
+  "VTV4 HD": {
+    "channel_id": "VTV4.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/cd/VTV4_logo_2026.png"
+  },
+  "VTV5 HD": {
+    "channel_id": "VTV5.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/VTV5_logo_2025.png"
+  },
+  "VTV5 Tay Nam Bo": {
+    "channel_id": "VTV5TayNamBo.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/dd/VTV5_T%C3%A2y_Nam_B%E1%BB%99.webp"
+  },
+  "VTV7 HD": {
+    "channel_id": "VTV7.vn",
+    "logo_url": "https://i.ibb.co/Q3twkrbY/IMG-2681.webp"
+  },
+  "VTV8 HD": {
+    "channel_id": "VTV8.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f2/VTV8_logo_2026.png"
+  },
+  "VTV9 HD": {
+    "channel_id": "VTV9.vn",
+    "logo_url": "https://i.imgur.com/QiY55sy.png"
+  },
+  "VTV10": {
+    "channel_id": "VTV10.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/VTV10_logo_2026.png/960px-VTV10_logo_2026.png"
+  },
+  "HTV1": {
+    "channel_id": "HTV1.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/HTV1.png/960px-HTV1.png"
+  },
+  "HTV2": {
+    "channel_id": "HTV2.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/HTV2_-_Vie_Channel.png"
+  },
+  "HTV3": {
+    "channel_id": "HTV3.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/65/HTV3-2018.png"
+  },
+  "HTV4": {
+    "channel_id": "HTV4.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/HTV4_logo.webp/960px-HTV4_logo.webp.png"
+  },
+  "HTV7 HD": {
+    "channel_id": "HTV7.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/HTV7_logo.webp"
+  },
+  "HTV9 HD": {
+    "channel_id": "HTV9.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/b/bf/HTV9_logo.webp"
+  },
+  "HTV The Thao": {
+    "channel_id": "HTVSports.vn",
+    "logo_url": "https://upload.wikimedia.org/wikipedia/vi/3/3f/HTV_THETHAO_2014.png"
+  },
+  "THVL1": {
+    "channel_id": "VinhLongTV1.vn",
+    "logo_url": "https://i.imgur.com/5YFsqPx.png"
+  },
+  "THVL2": {
+    "channel_id": "VinhLongTV2.vn",
+    "logo_url": "https://i.imgur.com/iluoazf.png"
+  },
+  "THVL3": {
+    "channel_id": "VinhLongTV3.vn",
+    "logo_url": "https://i.imgur.com/OQXEhqu.png"
+  },
+  "THVL4": {
+    "channel_id": "VinhLongTV4.vn",
+    "logo_url": "https://i.imgur.com/ARhIkvR.png"
+  },
+  "THVL5": {
+    "channel_id": "VinhLongTV5.vn",
+    "logo_url": "https://raw.githubusercontent.com/HaNoiIPTV/HaNoiIPTV.m3u/refs/heads/master/Truy%E1%BB%81n%20h%C3%ACnh%20V%C4%A9nh%20Long%205%20HD.png"
+  },
+  "ANTV - An Ninh TV": {
+    "channel_id": "AnNinhTV.vn",
+    "logo_url": "https://printgo.vn/uploads/file-logo/1/512x512.17e7982d313747a6a7aaef1f2568b780.ai.1.png"
+  },
+  "QPVN": {
+    "channel_id": "QPVN.vn",
+    "logo_url": "https://i.imgur.com/GQO7UNu.png"
+  },
+  "Vietnam Today": {
+    "channel_id": "VietnamToday.vn",
+    "logo_url": "https://i.imgur.com/xW9rY7s.png"
+  },
+  "Dong Nai 1": {
+    "channel_id": "DongNaiTV1.vn",
+    "logo_url": "https://i.imgur.com/oQyioVa.png"
+  },
+  "Dong Nai 2": {
+    "channel_id": "DongNaiTV2.vn",
+    "logo_url": "https://i.imgur.com/tNKPSkO.png"
+  },
+  "Dong Nai 3": {
+    "channel_id": "DongNaiTV3.vn",
+    "logo_url": "https://i.imgur.com/6P39BiA.png"
+  },
+  "Dong Thap 1": {
+    "channel_id": "DongThapTV.vn",
+    "logo_url": "https://i.ibb.co/XFX7yw0/logo2-1.png"
+  },
+  "Dong Thap 2": {
+    "channel_id": "DongThapTV.vn",
+    "logo_url": "https://i.ibb.co/XFX7yw0/logo2-1.png"
+  },
+  "Can Tho 1": {
+    "channel_id": "CanThoTV.vn",
+    "logo_url": "https://i.ibb.co/MDhNH26J/cantho1-2025.png"
+  },
+  "Can Tho 2": {
+    "channel_id": "CanThoTV2.vn",
+    "logo_url": "https://i.ibb.co/JjVvkMsf/cantho2-2025.png"
+  },
+  "Can Tho 3": {
+    "channel_id": "CanThoTV3.vn",
+    "logo_url": "https://i.ibb.co/d4G2PD9s/cantho3-2025.png"
+  },
+  "Tay Ninh TV": {
+    "channel_id": "TayNinhTV.vn",
+    "logo_url": "https://raw.githubusercontent.com/HaNoiIPTV/HaNoiIPTV.m3u/refs/heads/master/Logo%20kh%C3%A1c/TTV11%20-%20Truy%E1%BB%81n%20h%C3%ACnh%20T%C3%A2y%20Ninh%20HD/TTV11%20-%20Truy%E1%BB%81n%20h%C3%ACnh%20T%C3%A2y%20Ninh.png"
+  },
+  "Ha Noi 1": {
+    "channel_id": "HanoiTV1.vn",
+    "logo_url": "https://i.imgur.com/Je3K25E.png"
+  },
+  "Thai Nguyen TV": {
+    "channel_id": "ThaiNguyenTV.vn",
+    "logo_url": "https://thainguyentv.vn/modules/frontend/themes/ptthtn/images/logo.png"
+  },
+  "Cao Bang TV": {
+    "channel_id": "CaoBangTV.vn",
+    "logo_url": "https://i.imgur.com/dGonewm.png"
+  },
+  "Lao Cai TV": {
+    "channel_id": "LaoCaiTV.vn",
+    "logo_url": "https://i.imgur.com/TLvrDHa.png"
+  },
+  "Hung Yen TV": {
+    "channel_id": "HungYenTV.vn",
+    "logo_url": "https://i.imgur.com/TH1DWdm.png"
+  },
+  "Nghe An TV": {
+    "channel_id": "NgheAnTV.vn",
+    "logo_url": "https://i.imgur.com/d9YEEwC.png"
+  },
+  "Ha Tinh TV": {
+    "channel_id": "HaTinhTV.vn",
+    "logo_url": "https://i.imgur.com/4yIgKKx.png"
+  },
+  "Dien Bien TV": {
+    "channel_id": "DienBienTV.vn",
+    "logo_url": "https://i.imgur.com/u308o8q.png"
+  },
+  "Da Nang 1": {
+    "channel_id": "DaNangTV1.vn",
+    "logo_url": "https://i.imgur.com/EOMuO1z.png"
+  },
+  "Da Nang 2": {
+    "channel_id": "DaNangTV2.vn",
+    "logo_url": "https://raw.githubusercontent.com/HaNoiIPTV/HaNoiIPTV.m3u/refs/heads/master/Logo%20kh%C3%A1c/DRT%20-%20Da%20Nang%20TV/DRT2%20-%20Truy%E1%BB%81n%20h%C3%ACnh%20%C4%90%C3%A0%20N%E1%BA%B5ng%202%20%E2%80%A2%20B%E1%BA%A3n%202.png"
+  },
+  "Dak Lak TV": {
+    "channel_id": "DakLakTV.vn",
+    "logo_url": "https://i.imgur.com/gFfZvTW.png"
+  },
+  "Quang Ngai TV": {
+    "channel_id": "QuangNgaiTV.vn",
+    "logo_url": "https://i.imgur.com/QckiN3H.png"
+  }
+}
