@@ -41,7 +41,7 @@ final class Playlist {
                 if (!list.isEmpty()) return list;
             } catch (Exception ignored) { }
         }
-        try (InputStream in = context.getAssets().open("default.m3u")) {
+        try (InputStream in = context.getAssets().open("vietnam.m3u")) {
             return parse(new String(read(in), StandardCharsets.UTF_8));
         } catch (Exception ignored) { return new ArrayList<>(); }
     }
