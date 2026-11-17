@@ -8,6 +8,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
+import android.media.tv.TvContract;
+import android.media.tv.TvInputInfo;
+import android.media.tv.TvInputManager;
 import android.os.Bundle;
 import android.os.Build;
 import android.provider.Settings;
@@ -50,9 +54,19 @@ public final class TendooHomeActivity extends Activity {
                         | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         Config config = Config.load(this);
         FrameLayout root = findViewById(R.id.root);
-        root.setBackgroundColor(config.backgroundColor);
+        root.setBackgroundColor(0xFF0B0E16);
+        // Same warm red-to-charcoal cinematic backdrop as the owner's CleanYourTV TV.
+        // A single static native gradient costs no video decoding, images or animations.
+        View ambientRed = new View(this);
+        GradientDrawable glow = new GradientDrawable();
+        glow.setGradientType(GradientDrawable.RADIAL_GRADIENT);
+        glow.setGradientCenter(0.31f, 0.79f);
+        glow.setGradientRadius(getResources().getDisplayMetrics().widthPixels * 0.69f);
+        glow.setColors(new int[]{0xFFA82C27, 0xFF4E2025, 0xFF0B0E16});
+        ambientRed.setBackground(glow);
+        root.addView(ambientRed, 1, new FrameLayout.LayoutParams(-1, -1));
         SkyView sky = findViewById(R.id.sky);
-        sky.setIntensity(config.skyIntensity);
+        sky.setIntensity(0);
         // These expensive cinematic layers are intentionally off by default for slow TV boxes.
         findViewById(R.id.hero).setVisibility(View.GONE);
         findViewById(R.id.heroArt).setVisibility(View.GONE);
@@ -63,17 +77,14 @@ public final class TendooHomeActivity extends Activity {
         findViewById(R.id.stats).setVisibility(View.GONE);
 
         greeting = findViewById(R.id.greeting);
-        greeting.setText("TENDOO IPTV  •  TRANG CHỦ");
+        greeting.setText("XIN CHÀO");
         TextView inputs = findViewById(R.id.btnInputs);
-        inputs.setText("TRUYỀN HÌNH");
-        inputs.setOnClickListener(v -> openChannels());
+        inputs.setText(getString(R.string.inputs)); // original CleanYourTV 'Nguồn vào' pill
+        inputs.setOnClickListener(v -> showSources());
         TextView network = findViewById(R.id.btnWifi);
-        network.setText("ĐẶT LÀM HOME");
-        network.setOnClickListener(v -> requestDefaultHome());
-        network.setOnLongClickListener(v -> {
-            launchSystem(Settings.ACTION_WIFI_SETTINGS);
-            return true;
-        });
+        network.setText(getString(R.string.wifi)); // restore stock CleanYourTV network pill
+        network.setOnClickListener(v -> launchSystem(Settings.ACTION_WIFI_SETTINGS));
+        network.setOnLongClickListener(v -> { requestDefaultHome(); return true; });
         View arrange = findViewById(R.id.btnReorder);
         arrange.setVisibility(View.VISIBLE);
         arrange.setOnClickListener(v -> manage());
@@ -87,12 +98,18 @@ public final class TendooHomeActivity extends Activity {
 
         grid = findViewById(R.id.grid);
         grid.setClipToPadding(false);
-        grid.setPadding(0, dp(9), 0, dp(5));
+        grid.setPadding(0, dp(62), 0, dp(12));
         grid.setLayoutManager(new GridLayoutManager(this, COLUMNS));
+        // The original CleanYourTV translucent rounded band behind the pinned dock.
+        grid.addItemDecoration(new DockDecoration(COLUMNS,
+                getResources().getDisplayMetrics().density, true));
         grid.setHasFixedSize(true);
         grid.setItemAnimator(null);
         adapter = new TendooTileAdapter(this);
         grid.setAdapter(adapter);
+        TendooLogoCache.preload(this, () -> {
+            if (!isDestroyed() && !isFinishing()) adapter.notifyItemRangeChanged(12, 12);
+        });
         grid.post(() -> {
             if (grid.getChildCount() > 0) {
                 View first = grid.getLayoutManager().findViewByPosition(0);
@@ -147,6 +164,36 @@ public final class TendooHomeActivity extends Activity {
             return pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
         } catch (Exception ex) { return pkg; }
     }
+    private void showSources() {
+        TvInputManager inputManager = (TvInputManager) getSystemService(TV_INPUT_SERVICE);
+        if (inputManager == null) {
+            openChannels();
+            return;
+        }
+        List<TvInputInfo> sources = inputManager.getTvInputList();
+        if (sources == null || sources.isEmpty()) {
+            openChannels();
+            return;
+        }
+        String[] labels = new String[sources.size() + 1];
+        labels[0] = "IPTV Việt Nam";
+        for (int i = 0; i < sources.size(); i++) {
+            CharSequence name = sources.get(i).loadLabel(getPackageManager());
+            labels[i + 1] = name == null ? "HDMI / TV " + (i + 1) : name.toString();
+        }
+        new AlertDialog.Builder(this).setTitle("NGUỒN VÀO")
+            .setItems(labels, (dialog, which) -> {
+                if (which == 0) { openChannels(); return; }
+                try {
+                    Intent source = new Intent(Intent.ACTION_VIEW,
+                        TvContract.buildChannelUriForPassthroughInput(sources.get(which - 1).getId()));
+                    startActivity(source);
+                } catch (Exception ex) {
+                    Toast.makeText(this,"Không mở được nguồn vào này.",Toast.LENGTH_SHORT).show();
+                }
+            }).show();
+    }
+
     private void launchSystem(String action) {
         try { startActivity(new Intent(action)); }
         catch (Exception ex) {
