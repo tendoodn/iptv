@@ -32,11 +32,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Compile and package installable test APK
-        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Compile and package R8-minified test APK
+        run: gradle --no-daemon --stacktrace :app:assembleRelease
       - name: Name and measure build
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Tendoo-IPTV-Home-1.0.0-test1.apk
+          cp app/build/outputs/apk/release/app-release.apk Tendoo-IPTV-Home-1.0.0-test1.apk
           wc -c Tendoo-IPTV-Home-1.0.0-test1.apk
           sha256sum Tendoo-IPTV-Home-1.0.0-test1.apk
       - uses: actions/upload-artifact@v4
@@ -51,5 +51,5 @@ jobs:
           if ! gh release view iptv-v1.0.0-test1 >/dev/null 2>&1; then
             gh release create iptv-v1.0.0-test1 Tendoo-IPTV-Home-1.0.0-test1.apk \
               --title "Tendoo IPTV Home 1.0.0.test1" --prerelease \
-              --notes "Android TV launcher 4x6 grid, native IPTV player and remotely editable M3U playlist. This is an unsigned-for-production Android debug test build; test before making it default HOME."
+              --notes "Android TV launcher 4x6 grid, native IPTV player and remotely editable M3U playlist. R8-minified test build signed with a temporary debug key, not a production release; test before making it default HOME."
           fi
