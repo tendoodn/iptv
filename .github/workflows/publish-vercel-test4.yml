@@ -1,0 +1,40 @@
+name: Publish Vercel-compiled Tendoo IPTV test4 APK
+
+# This workflow DOES NOT build Android code. It receives the APK compiled inside
+# Vercel Sandbox and uploads those verified bytes as a durable GitHub release.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-vercel-test4.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  publish-vercel-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK produced by Vercel Sandbox
+        run: |
+          curl --fail --location --retry 4 --retry-delay 2 \
+            'https://sb-25127rm1ls7i.vercel.run/Tendoo-IPTV-Home-1.0.0-test4.apk' \
+            --output Tendoo-IPTV-Home-1.0.0-test4.apk
+          test "$(wc -c < Tendoo-IPTV-Home-1.0.0-test4.apk)" -eq 1962828
+          printf '%s  %s\n' \
+            '60be6ba3da0070f32a6736d802cb4aac468650f8e00fe32c034d4df46edef4b6' \
+            Tendoo-IPTV-Home-1.0.0-test4.apk | sha256sum --check
+      - name: Upload exact Vercel-built APK to GitHub Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view iptv-v1.0.0-test4 >/dev/null 2>&1; then
+            gh release upload iptv-v1.0.0-test4 Tendoo-IPTV-Home-1.0.0-test4.apk --clobber
+          else
+            gh release create iptv-v1.0.0-test4 Tendoo-IPTV-Home-1.0.0-test4.apk \
+              --title 'Tendoo IPTV Home 1.0.0.test4 · Vercel Sandbox build' \
+              --prerelease \
+              --notes 'Native Android APK compiled on Vercel Sandbox (not GitHub Actions). Built from CleanYourTV layout; red-black theme, 5 tiles/row like reference, optional 6; 2 rows of pinned apps, 2 rows of logo-first channels; 46 broadcaster logos packed offline, IPTV Media3 player, user-confirmed HOME selection. Verified 1962828 bytes SHA-256 60be6ba3da0070f32a6736d802cb4aac468650f8e00fe32c034d4df46edef4b6. Test signed; device compatibility and live channel playback require device verification.'
+          fi
