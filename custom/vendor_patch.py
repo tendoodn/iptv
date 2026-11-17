@@ -19,9 +19,9 @@ assert "8.5.2" in base, "Unexpected upstream Android Gradle Plugin version"
 base_gradle.write_text(base.replace("8.5.2", "8.7.3"))
 s, n = re.subn(r"applicationId providers\.gradleProperty\('launcherApplicationId'\)\.getOrElse\('com\.gathin\.tvhome'\)", "applicationId 'vn.tendoo.iptv'", s)
 assert n == 1, "Cannot find CleanYourTV applicationId"
-s, n = re.subn(r"versionCode\s+6\b", "versionCode 3", s)
+s, n = re.subn(r"versionCode\s+6\b", "versionCode 4", s)
 assert n == 1, "Cannot find original versionCode"
-s, n = re.subn(r"versionName\s+'2\.5'", "versionName '1.0.0.test3'", s)
+s, n = re.subn(r"versionName\s+'2\.5'", "versionName '1.0.0.test4'", s)
 assert n == 1, "Cannot find versionName"
 s = s.replace(
     "    testImplementation 'junit:junit:4.13.2'",
@@ -89,5 +89,13 @@ icons = list((root / "custom/drawable").glob("*.xml"))
 assert len(icons) == 2, "Expected a launcher icon and a TV banner"
 for icon in icons:
     (drawable_dst / icon.name).write_bytes(icon.read_bytes())
+# Package the actual broadcaster logos into the offline APK.
+asset_dst = root / "launcher/app/src/main/assets"
+asset_dst.mkdir(parents=True, exist_ok=True)
+logo_bundle = root / "custom/logo_pack.json"
+if logo_bundle.exists():
+    (asset_dst / "logo_pack.json").write_bytes(logo_bundle.read_bytes())
+else:
+    (asset_dst / "logo_pack.json").write_text("{}")
 print("Patched CleanYourTV resources with", len(sources),
       "IPTV Java sources and", len(icons), "launcher icon resources")
