@@ -1,0 +1,77 @@
+name: Import CleanYourTV design and build IPTV Home test2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'custom/**'
+      - '.github/workflows/clean-home-test2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: iptv-clean-home
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout IPTV repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Import the user's CleanYourTV launcher source and assets
+        run: |
+          git clone --depth 1 --branch main https://github.com/tendoodn/cleanyourtv.git /tmp/tendoo-cleanyourtv
+          rm -rf launcher
+          cp -a /tmp/tendoo-cleanyourtv/launcher launcher
+          cp /tmp/tendoo-cleanyourtv/LICENSE CLEAN_YOUR_TV_LICENSE.txt
+          python3 custom/vendor_patch.py
+          git add launcher CLEAN_YOUR_TV_LICENSE.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --cached --quiet; then
+            git commit -m "Vendor CleanYourTV launcher UI and integrate IPTV test2"
+            git push origin HEAD:main
+          fi
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK
+        run: |
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          MANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -n 1)"
+          test -n "$MANAGER"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          "$MANAGER" --sdk_root="$SDK_ROOT" --install "platforms;android-34" "build-tools;34.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Build CleanYourTV-style IPTV APK
+        working-directory: launcher
+        run: gradle --no-daemon --stacktrace :app:assembleRelease
+      - name: Copy and checksum APK
+        run: |
+          cp launcher/app/build/outputs/apk/release/app-release.apk Tendoo-IPTV-Home-1.0.0-test2.apk
+          wc -c Tendoo-IPTV-Home-1.0.0-test2.apk
+          sha256sum Tendoo-IPTV-Home-1.0.0-test2.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tendoo-IPTV-Home-1.0.0-test2
+          path: Tendoo-IPTV-Home-1.0.0-test2.apk
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish verified test APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create iptv-v1.0.0-test2 Tendoo-IPTV-Home-1.0.0-test2.apk \
+            --title "Tendoo IPTV Home 1.0.0.test2 (CleanYourTV UI)" \
+            --prerelease \
+            --notes "CleanYourTV original layout/assets, editable 2 app rows + 2 quick TV rows (6 tiles each). Media3 HLS playback with alternative-source retry. Debug-key test signing; do not disable stock HOME until validated on device."
