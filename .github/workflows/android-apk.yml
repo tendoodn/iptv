@@ -5,11 +5,14 @@ on:
     branches: [main]
     paths:
       - 'app/**'
-      - 'playlist/**'
       - '*.gradle'
       - 'gradle.properties'
       - '.github/workflows/android-apk.yml'
   workflow_dispatch:
+
+concurrency:
+  group: iptv-apk-main
+  cancel-in-progress: true
 
 permissions:
   contents: write
