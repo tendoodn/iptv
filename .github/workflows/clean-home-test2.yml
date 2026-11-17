@@ -1,11 +1,11 @@
-name: Import CleanYourTV design and build IPTV Home test2
+name: Build CleanYourTV-based IPTV Home test3
 
 on:
   push:
     branches: [main]
     paths:
       - 'custom/**'
-      - '.github/workflows/clean-home-test2.yml'
+      - '.github/workflows/clean-home-test3.yml'
   workflow_dispatch:
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if ! git diff --cached --quiet; then
-            git commit -m "Vendor CleanYourTV launcher UI and integrate IPTV test2"
+            git commit -m "Vendor CleanYourTV launcher UI with visible HOME icon (test3)"
             git push origin HEAD:main
           fi
 
@@ -56,22 +56,39 @@ jobs:
       - name: Build CleanYourTV-style IPTV APK
         working-directory: launcher
         run: gradle --no-daemon --stacktrace :app:assembleRelease
+      - name: Validate installed launcher intents and icon in compiled APK
+        run: |
+          APK=launcher/app/build/outputs/apk/release/app-release.apk
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          test -f "$APK" && test -x "$AAPT"
+          "$AAPT" dump badging "$APK" | tee launcher-badging.txt
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > launcher-manifest-tree.txt
+          grep -q "launchable-activity:" launcher-badging.txt
+          grep -q "leanback-launchable-activity:" launcher-badging.txt
+          grep -q "android.intent.category.HOME" launcher-manifest-tree.txt
+          grep -q "android.intent.category.LAUNCHER" launcher-manifest-tree.txt
+          grep -q "android.intent.category.LEANBACK_LAUNCHER" launcher-manifest-tree.txt
+          grep -q "tendoo_icon" launcher-badging.txt
+          echo "Verified HOME + LAUNCHER + LEANBACK_LAUNCHER + visible icon."
       - name: Copy and checksum APK
         run: |
-          cp launcher/app/build/outputs/apk/release/app-release.apk Tendoo-IPTV-Home-1.0.0-test2.apk
-          wc -c Tendoo-IPTV-Home-1.0.0-test2.apk
-          sha256sum Tendoo-IPTV-Home-1.0.0-test2.apk
+          cp launcher/app/build/outputs/apk/release/app-release.apk Tendoo-IPTV-Home-1.0.0-test3.apk
+          wc -c Tendoo-IPTV-Home-1.0.0-test3.apk
+          sha256sum Tendoo-IPTV-Home-1.0.0-test3.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Tendoo-IPTV-Home-1.0.0-test2
-          path: Tendoo-IPTV-Home-1.0.0-test2.apk
+          name: Tendoo-IPTV-Home-1.0.0-test3
+          path: |
+            Tendoo-IPTV-Home-1.0.0-test3.apk
+            launcher-badging.txt
+            launcher-manifest-tree.txt
           retention-days: 30
           if-no-files-found: error
       - name: Publish verified test APK
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create iptv-v1.0.0-test2 Tendoo-IPTV-Home-1.0.0-test2.apk \
-            --title "Tendoo IPTV Home 1.0.0.test2 (CleanYourTV UI)" \
+          gh release create iptv-v1.0.0-test3 Tendoo-IPTV-Home-1.0.0-test3.apk \
+            --title "Tendoo IPTV Home 1.0.0.test3 (CleanYourTV UI)" \
             --prerelease \
-            --notes "CleanYourTV original layout/assets, editable 2 app rows + 2 quick TV rows (6 tiles each). Media3 HLS playback with alternative-source retry. Debug-key test signing; do not disable stock HOME until validated on device."
+            --notes "Fix missing TV icon: HOME, LAUNCHER, and LEANBACK_LAUNCHER intents; dedicated IPTV icon/banner; Android HOME RoleManager chooser plus settings fallback. CleanYourTV screen and Media3 HLS retained. Debug-signed test build; stock launcher untouched."
