@@ -1,5 +1,15 @@
 # Tendoo IPTV Home 📺
 
+## Phiên bản 1.0.0.test3 — icon hiển thị và chọn HOME mặc định (17/11/2026)
+
+- **[Tải APK 1.0.0.test3](https://github.com/tendoodn/iptv/releases/download/iptv-v1.0.0-test3/Tendoo-IPTV-Home-1.0.0-test3.apk)** — 1.263.949 byte, R8-optimized, debug-signed test build.
+- Đã kiểm tra trực tiếp bằng Android aapt: ứng dụng có ba intent `HOME`, `LAUNCHER`, `LEANBACK_LAUNCHER`, với icon + banner được đóng gói trong APK.
+- Khi mở lần đầu, ứng dụng đề nghị chọn Tendoo IPTV Home làm HOME. Nút **ĐẶT LÀM HOME** nằm trên thanh phía trên, dùng **RoleManager** trên Android 10+ hoặc mở Home settings nếu thiết bị không hỗ trợ role picker.
+- Việc đổi HOME **yêu cầu người dùng chấp thuận trên thiết bị**. Không root, không tự tắt hay gỡ launcher hệ thống. Một số TV Box khóa quyền đổi HOME trong firmware.
+- Nếu TV Box vẫn ẩn icon, vào **Cài đặt → Ứng dụng → Tất cả ứng dụng → Tendoo IPTV Home → Mở** để vào ứng dụng, sau đó bấm **ĐẶT LÀM HOME**. Nếu không có tùy chọn, thiết bị có thể chặn launcher ngoài.
+- Bản test2 → test3 có thể cần **gỡ test2 rồi cài test3** do chữ ký debug test khác nhau. Đây là bản kiểm thử, chưa có QA bằng remote trên TV Box thật.
+
+
 **Launcher Android TV siêu gọn + trình phát IPTV Việt Nam tích hợp**, phát triển độc lập dựa trên các nguyên tắc tối giản của [CleanYourTV (fork của anh)](https://github.com/tendoodn/cleanyourtv). Không tích hợp thư viện UI, WebView, quảng cáo, analytics, dịch vụ nền hay bộ máy Chromium.
 
 ## Bố cục cố định 4 hàng
