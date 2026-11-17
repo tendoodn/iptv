@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'vn.tendoo.iptv'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'vn.tendoo.iptv'
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName '1.0.0'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    buildTypes {
+        debug { minifyEnabled false }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
+        }
+    }
+}
+
+tasks.register('preparePlaylist', Copy) {
+    from file("$rootDir/playlist/vietnam.m3u")
+    into layout.buildDirectory.dir('generated/playlist-assets')
+    rename('vietnam.m3u', 'default.m3u')
+}
+android.sourceSets.main.assets.srcDirs += [file("$buildDir/generated/playlist-assets")]
+tasks.named('preBuild').configure { dependsOn tasks.named('preparePlaylist') }
+
+// Android SDK MediaPlayer handles HLS; zero third-party runtime dependencies.
