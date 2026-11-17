@@ -12,6 +12,7 @@ from io import BytesIO
 import json
 import re
 import urllib.request
+from urllib.parse import quote
 from pathlib import Path
 from PIL import Image
 
@@ -63,7 +64,16 @@ def channel_id(name):
 
 def load_url(url, limit=3_000_000):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (TendooIPTV-LogoBundle/1.0)"})
-    with urllib.request.urlopen(req, timeout=15) as r:
+    try:
+        response = urllib.request.urlopen(req, timeout=15)
+    except Exception:
+        # Wikimedia throttles burst requests (429); a caching image proxy is a
+        # fallback for downloading the SAME original logo, not a substitute logo.
+        proxied="https://images.weserv.nl/?url="+quote(url,safe="")+"&w=300"
+        response=urllib.request.urlopen(
+            urllib.request.Request(proxied,headers={"User-Agent":"TendooIPTV/1.0"}),
+            timeout=17)
+    with response as r:
         raw = r.read(limit+1)
         if len(raw)>limit: raise ValueError("Logo exceeds file-size limit")
         return raw
