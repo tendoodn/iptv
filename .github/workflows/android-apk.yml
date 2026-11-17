@@ -1,0 +1,52 @@
+name: Build lightweight IPTV Home APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'playlist/**'
+      - '*.gradle'
+      - 'gradle.properties'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Compile and package installable test APK
+        run: gradle --no-daemon --stacktrace :app:assembleDebug
+      - name: Name and measure build
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk Tendoo-IPTV-Home-1.0.0-test1.apk
+          wc -c Tendoo-IPTV-Home-1.0.0-test1.apk
+          sha256sum Tendoo-IPTV-Home-1.0.0-test1.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tendoo-IPTV-Home-1.0.0-test1
+          path: Tendoo-IPTV-Home-1.0.0-test1.apk
+          if-no-files-found: error
+      - name: Publish test release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view iptv-v1.0.0-test1 >/dev/null 2>&1; then
+            gh release create iptv-v1.0.0-test1 Tendoo-IPTV-Home-1.0.0-test1.apk \
+              --title "Tendoo IPTV Home 1.0.0.test1" --prerelease \
+              --notes "Android TV launcher 4x6 grid, native IPTV player and remotely editable M3U playlist. This is an unsigned-for-production Android debug test build; test before making it default HOME."
+          fi
