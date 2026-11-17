@@ -1,97 +1,15 @@
-name: Build CleanYourTV-based IPTV Home test3
-
+name: Legacy IPTV test3 build (retired)
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'custom/**'
-      - '.github/workflows/clean-home-test3.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
-
-concurrency:
-  group: iptv-clean-home-test3
-  cancel-in-progress: true
+  contents: read
 
 jobs:
-  build:
+  retired:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout IPTV repository
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-      - name: Import the user's CleanYourTV launcher source and assets
+      - name: Vercel Sandbox now builds the Android APK
         run: |
-          git clone --depth 1 --branch main https://github.com/tendoodn/cleanyourtv.git /tmp/tendoo-cleanyourtv
-          rm -rf launcher
-          cp -a /tmp/tendoo-cleanyourtv/launcher launcher
-          cp /tmp/tendoo-cleanyourtv/LICENSE CLEAN_YOUR_TV_LICENSE.txt
-          python3 custom/vendor_patch.py
-          git add launcher CLEAN_YOUR_TV_LICENSE.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if ! git diff --cached --quiet; then
-            git commit -m "Vendor CleanYourTV launcher UI with visible HOME icon (test3)"
-            git push origin HEAD:main
-          fi
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-      - name: Install Android SDK
-        run: |
-          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
-          MANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager | head -n 1)"
-          test -n "$MANAGER"
-          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
-          "$MANAGER" --sdk_root="$SDK_ROOT" --install "platforms;android-35" "build-tools;35.0.0"
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.9'
-      - name: Build CleanYourTV-style IPTV APK
-        working-directory: launcher
-        run: gradle --no-daemon --stacktrace :app:assembleRelease
-      - name: Validate installed launcher intents and icon in compiled APK
-        run: |
-          APK=launcher/app/build/outputs/apk/release/app-release.apk
-          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
-          test -f "$APK" && test -x "$AAPT"
-          "$AAPT" dump badging "$APK" | tee launcher-badging.txt
-          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > launcher-manifest-tree.txt
-          grep -q "launchable-activity:" launcher-badging.txt
-          grep -q "leanback-launchable-activity:" launcher-badging.txt
-          grep -q "android.intent.category.HOME" launcher-manifest-tree.txt
-          grep -q "android.intent.category.LAUNCHER" launcher-manifest-tree.txt
-          grep -q "android.intent.category.LEANBACK_LAUNCHER" launcher-manifest-tree.txt
-          # R8 shortens drawable resource filenames (e.g. res/6h.xml).
-          # Validate the actual published icon/banner entries, not the source filename.
-          grep -E -q "^launchable-activity:.*icon='res/" launcher-badging.txt
-          grep -E -q "^leanback-launchable-activity:.*banner='res/" launcher-badging.txt
-          echo "Verified HOME + LAUNCHER + LEANBACK_LAUNCHER and packaged icon/banner."
-      - name: Copy and checksum APK
-        run: |
-          cp launcher/app/build/outputs/apk/release/app-release.apk Tendoo-IPTV-Home-1.0.0-test3.apk
-          wc -c Tendoo-IPTV-Home-1.0.0-test3.apk
-          sha256sum Tendoo-IPTV-Home-1.0.0-test3.apk
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Tendoo-IPTV-Home-1.0.0-test3
-          path: |
-            Tendoo-IPTV-Home-1.0.0-test3.apk
-            launcher-badging.txt
-            launcher-manifest-tree.txt
-          retention-days: 30
-          if-no-files-found: error
-      - name: Publish verified test APK
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create iptv-v1.0.0-test3 Tendoo-IPTV-Home-1.0.0-test3.apk \
-            --title "Tendoo IPTV Home 1.0.0.test3 (CleanYourTV UI)" \
-            --prerelease \
-            --notes "Fix missing TV icon: HOME, LAUNCHER, and LEANBACK_LAUNCHER intents; dedicated IPTV icon/banner; Android HOME RoleManager chooser plus settings fallback. CleanYourTV screen and Media3 HLS retained. Debug-signed test build; stock launcher untouched."
+          echo "The TV launcher is now compiled on Vercel Sandbox."
+          echo "See scripts/build-vercel-apk.sh and the Vercel project."
