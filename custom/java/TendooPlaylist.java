@@ -26,12 +26,16 @@ final class TendooPlaylist {
     private static final int LIMIT = 1024 * 1024 * 2;
 
     static final class Channel {
-        final String name, url, group, id;
+        final String name, url, group, id, logo;
         Channel(String name, String url, String group, String id) {
+            this(name, url, group, id, "");
+        }
+        Channel(String name, String url, String group, String id, String logo) {
             this.name = name;
             this.url = url;
             this.group = group;
             this.id = id;
+            this.logo = logo;
         }
     }
     interface Callback { void done(String summary); }
@@ -128,7 +132,7 @@ final class TendooPlaylist {
     }
     static List<Channel> parse(String content) {
         List<Channel> list = new ArrayList<>();
-        String name = null, group = "", id = "";
+        String name = null, group = "", id = "", logo = "";
         for (String raw : content.replace("\ufeff", "").replace("\r", "").split("\n")) {
             String line = raw.trim();
             if (line.startsWith("#EXTINF:")) {
@@ -136,11 +140,12 @@ final class TendooPlaylist {
                 name = i >= 0 ? line.substring(i + 1).trim() : "";
                 group = attribute(line, "group-title");
                 id = attribute(line, "tvg-id");
+                logo = attribute(line, "tvg-logo");
             } else if (name != null && !line.isEmpty() && !line.startsWith("#")) {
                 if (line.startsWith("https://") && !name.isEmpty()) {
-                    list.add(new Channel(name, line, group, id));
+                    list.add(new Channel(name, line, group, id, logo));
                 }
-                name = null; group = ""; id = "";
+                name = null; group = ""; id = ""; logo = "";
                 if (list.size() >= 1000) break;
             }
         }
