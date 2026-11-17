@@ -44,5 +44,7 @@ jobs:
           git add custom/logo_pack.json custom/logo_provenance.json playlist/vietnam.m3u
           if ! git diff --cached --quiet; then
             git commit -m 'Bundle actual TV broadcaster logos for offline launcher tiles'
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           fi
