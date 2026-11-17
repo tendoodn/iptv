@@ -18,13 +18,15 @@ import java.util.List;
 /** Same item_app.xml and tvOS banners as CleanYourTV; exactly 6 tiles in each of 4 rows. */
 final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Tile> {
     private final TendooHomeActivity host;
-    private final int tileW, tileH, itemH;
+    private final int tileW, tileH, itemH, columns, appSlots;
     TendooTileAdapter(TendooHomeActivity activity) {
         host = activity;
+        columns = host.columns();
+        appSlots = host.appSlots();
         float density = host.getResources().getDisplayMetrics().density;
         int width = host.getResources().getDisplayMetrics().widthPixels;
         int height = host.getResources().getDisplayMetrics().heightPixels;
-        int cell = (width - host.dp(112) - host.dp(14)) / 6;
+        int cell = (width - host.dp(112) - host.dp(14)) / columns;
         tileW = Math.max(host.dp(74), Math.min(host.dp(180),
                 cell - host.dp(10)));
         // Constrain all four rows to fit under the original large clock.
@@ -35,7 +37,7 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         setHasStableIds(true);
     }
     @Override public long getItemId(int position) { return position; }
-    @Override public int getItemCount() { return 24; }
+    @Override public int getItemCount() { return appSlots * 2; }
 
     static final class Tile extends RecyclerView.ViewHolder {
         final FrameLayout card;
@@ -83,7 +85,7 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
             h.card.animate().scaleX(focused ? 1.075f : 1f)
                     .scaleY(focused ? 1.075f : 1f)
                     .setDuration(115).start();
-            if (h.getBindingAdapterPosition() >= 6) {
+            if (h.getBindingAdapterPosition() >= columns) {
                 h.caption.setVisibility(View.VISIBLE);
                 h.caption.animate().alpha(focused ? 1f : 0f).setDuration(105).start();
             }
@@ -130,7 +132,7 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         h.label.setText(name);
         h.label.setVisibility(h.banner.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
         h.caption.setText(name);
-        h.caption.setVisibility(h.getBindingAdapterPosition() >= 6 ? View.VISIBLE : View.GONE);
+        h.caption.setVisibility(h.getBindingAdapterPosition() >= columns ? View.VISIBLE : View.GONE);
         h.caption.setAlpha(0f);
         h.card.setFocusable(true);
         h.card.setOnClickListener(v -> host.openApp(packageName));
@@ -163,7 +165,7 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         // may fetch their tvg-logo HTTPS URL asynchronously into a disk cache.
         Drawable logo = TendooLogoCache.drawable(host, ch, () -> {
             if (!host.isFinishing() && !host.isDestroyed())
-                notifyItemRangeChanged(12, 12);
+                notifyItemRangeChanged(appSlots, appSlots);
         });
         h.banner.setScaleType(ImageView.ScaleType.FIT_CENTER);
         h.banner.setImageDrawable(logo);
@@ -194,14 +196,14 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         h.icon.setImageDrawable(null);
         h.caption.setVisibility(View.GONE);
         h.caption.setAlpha(0f);
-        if (position < 12) {
+        if (position < appSlots) {
             List<String> pinned = host.pins();
             if (position < pinned.size()) bindApp(h, pinned.get(position));
             else if (position == pinned.size()) bindPlus(h);
             else bindEmpty(h);
             return;
         }
-        int n = 12 * host.currentPage() + position - 12;
+        int n = appSlots * host.currentPage() + position - appSlots;
         List<TendooPlaylist.Channel> channels = host.quickChannels();
         if (n < channels.size()) bindChannel(h, channels.get(n));
         else bindEmpty(h);
