@@ -2,12 +2,14 @@ package com.gathin.tvhome;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.role.RoleManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Build;
 import android.provider.Settings;
 import android.view.KeyEvent;
 import android.view.View;
@@ -66,8 +68,12 @@ public final class TendooHomeActivity extends Activity {
         inputs.setText("TRUYỀN HÌNH");
         inputs.setOnClickListener(v -> openChannels());
         TextView network = findViewById(R.id.btnWifi);
-        network.setText("MẠNG");
-        network.setOnClickListener(v -> launchSystem(Settings.ACTION_WIFI_SETTINGS));
+        network.setText("ĐẶT LÀM HOME");
+        network.setOnClickListener(v -> requestDefaultHome());
+        network.setOnLongClickListener(v -> {
+            launchSystem(Settings.ACTION_WIFI_SETTINGS);
+            return true;
+        });
         View arrange = findViewById(R.id.btnReorder);
         arrange.setVisibility(View.VISIBLE);
         arrange.setOnClickListener(v -> manage());
@@ -94,6 +100,15 @@ public final class TendooHomeActivity extends Activity {
             }
         });
         if (System.currentTimeMillis() - prefs.getLong("sync", 0) > 4L * 3600_000L) sync(false);
+        // Explain and offer the system HOME chooser once; never change HOME silently.
+        if (!prefs.getBoolean("home_prompt_shown_v3", false)) {
+            prefs.edit().putBoolean("home_prompt_shown_v3", true).apply();
+            grid.post(() -> new AlertDialog.Builder(this)
+                .setTitle("Đặt Tendoo IPTV làm màn hình chính?")
+                .setMessage("Ứng dụng có thể thay màn hình HOME gốc khi TV cho phép. Launcher gốc vẫn được giữ để khôi phục. Anh muốn chọn Tendoo IPTV Home làm HOME mặc định?")
+                .setPositiveButton("Chọn làm HOME", (d, which) -> requestDefaultHome())
+                .setNegativeButton("Để sau", null).show());
+        }
     }
     int dp(int d) {
         return (int) (getResources().getDisplayMetrics().density * d + .5f);
@@ -138,6 +153,47 @@ public final class TendooHomeActivity extends Activity {
             Toast.makeText(this, "Thiết bị không hỗ trợ mục này", Toast.LENGTH_SHORT).show();
         }
     }
+    private void requestDefaultHome() {
+        // Android 10+ exposes a guarded user-confirmed HOME role picker.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            RoleManager roleManager = getSystemService(RoleManager.class);
+            if (roleManager != null && roleManager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                if (roleManager.isRoleHeld(RoleManager.ROLE_HOME)) {
+                    Toast.makeText(this, "Tendoo IPTV Home đang là HOME mặc định.",
+                            Toast.LENGTH_LONG).show();
+                    return;
+                }
+                try {
+                    startActivityForResult(
+                            roleManager.createRequestRoleIntent(RoleManager.ROLE_HOME), 1003);
+                    return;
+                } catch (Exception ignored) { }
+            }
+        }
+        // Android TV boxes and older firmware may only expose the Home-app settings.
+        try {
+            startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+        } catch (Exception ex) {
+            try {
+                startActivity(new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS));
+            } catch (Exception ignored) {
+                new AlertDialog.Builder(this).setTitle("Thiết bị hạn chế đổi HOME")
+                    .setMessage("Vào Cài đặt → Ứng dụng → Ứng dụng mặc định → Ứng dụng màn hình chính. Nếu TV không có mục này, firmware có thể khóa launcher gốc.")
+                    .setPositiveButton("Đã hiểu", null).show();
+            }
+        }
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1003) {
+            Toast.makeText(this, resultCode == RESULT_OK
+                        ? "Đã chọn Tendoo IPTV Home làm launcher mặc định."
+                        : "Chưa đổi launcher. Anh vẫn có thể vào Cài đặt để chọn.",
+                    Toast.LENGTH_LONG).show();
+        }
+    }
+
     void openApp(String pkg) {
         if (IPTV.equals(pkg)) { openChannels(); return; }
         PackageManager pm = getPackageManager();
@@ -229,7 +285,7 @@ public final class TendooHomeActivity extends Activity {
                                 case 3: turnPage(1); break;
                                 case 4: turnPage(-1); break;
                                 case 5: sync(true); break;
-                                case 6: launchSystem(Settings.ACTION_HOME_SETTINGS); break;
+                                case 6: requestDefaultHome(); break;
                                 default: break;
                             }
                         }).show();
