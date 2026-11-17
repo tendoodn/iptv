@@ -58,11 +58,12 @@ public final class TendooHomeActivity extends Activity {
         // Same warm red-to-charcoal cinematic backdrop as the owner's CleanYourTV TV.
         // A single static native gradient costs no video decoding, images or animations.
         View ambientRed = new View(this);
-        GradientDrawable glow = new GradientDrawable();
+        GradientDrawable glow = new GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFFA82C27, 0xFF4E2025, 0xFF0B0E16});
         glow.setGradientType(GradientDrawable.RADIAL_GRADIENT);
         glow.setGradientCenter(0.31f, 0.79f);
         glow.setGradientRadius(getResources().getDisplayMetrics().widthPixels * 0.69f);
-        glow.setColors(new int[]{0xFFA82C27, 0xFF4E2025, 0xFF0B0E16});
         ambientRed.setBackground(glow);
         root.addView(ambientRed, 1, new FrameLayout.LayoutParams(-1, -1));
         SkyView sky = findViewById(R.id.sky);
