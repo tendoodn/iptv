@@ -1,0 +1,277 @@
+package com.gathin.tvhome;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.provider.Settings;
+import android.view.KeyEvent;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import org.json.JSONArray;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+/** Original CleanYourTV visuals/resources, with a purpose-built 6x4 app and IPTV layout. */
+public final class TendooHomeActivity extends Activity {
+    static final String IPTV = "@iptv";
+    static final int COLUMNS = 6;
+    static final int PIN_LIMIT = 11; // permanent + slot is always visible in the first two rows
+
+    private SharedPreferences prefs;
+    private RecyclerView grid;
+    private TendooTileAdapter adapter;
+    private List<String> pinned = new ArrayList<>();
+    private List<TendooPlaylist.Channel> channels = new ArrayList<>();
+    private int channelPage;
+    private TextView greeting;
+
+    @Override protected void onCreate(Bundle saved) {
+        super.onCreate(saved);
+        setContentView(R.layout.activity_main); // the real CleanYourTV tvOS screen
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        Config config = Config.load(this);
+        FrameLayout root = findViewById(R.id.root);
+        root.setBackgroundColor(config.backgroundColor);
+        SkyView sky = findViewById(R.id.sky);
+        sky.setIntensity(config.skyIntensity);
+        // These expensive cinematic layers are intentionally off by default for slow TV boxes.
+        findViewById(R.id.hero).setVisibility(View.GONE);
+        findViewById(R.id.heroArt).setVisibility(View.GONE);
+        findViewById(R.id.heroScrim).setVisibility(View.GONE);
+        findViewById(R.id.ambient).setVisibility(View.GONE);
+        findViewById(R.id.glass).setVisibility(View.GONE);
+        findViewById(R.id.racePanel).setVisibility(View.GONE);
+        findViewById(R.id.stats).setVisibility(View.GONE);
+
+        greeting = findViewById(R.id.greeting);
+        greeting.setText("TENDOO IPTV  •  TRANG CHỦ");
+        TextView inputs = findViewById(R.id.btnInputs);
+        inputs.setText("TRUYỀN HÌNH");
+        inputs.setOnClickListener(v -> openChannels());
+        TextView network = findViewById(R.id.btnWifi);
+        network.setText("MẠNG");
+        network.setOnClickListener(v -> launchSystem(Settings.ACTION_WIFI_SETTINGS));
+        View arrange = findViewById(R.id.btnReorder);
+        arrange.setVisibility(View.VISIBLE);
+        arrange.setOnClickListener(v -> manage());
+        View settings = findViewById(R.id.btnSettings);
+        settings.setOnClickListener(v -> launchSystem(Settings.ACTION_SETTINGS));
+        settings.setOnLongClickListener(v -> { manage(); return true; });
+
+        prefs = getSharedPreferences("iptv-home-layout-v2", MODE_PRIVATE);
+        pinned = loadPins();
+        channels = TendooPlaylist.load(this);
+
+        grid = findViewById(R.id.grid);
+        grid.setClipToPadding(false);
+        grid.setPadding(0, dp(9), 0, dp(5));
+        grid.setLayoutManager(new GridLayoutManager(this, COLUMNS));
+        grid.setHasFixedSize(true);
+        grid.setItemAnimator(null);
+        adapter = new TendooTileAdapter(this);
+        grid.setAdapter(adapter);
+        grid.post(() -> {
+            if (grid.getChildCount() > 0) {
+                View first = grid.getLayoutManager().findViewByPosition(0);
+                if (first != null) first.requestFocus();
+            }
+        });
+        if (System.currentTimeMillis() - prefs.getLong("sync", 0) > 4L * 3600_000L) sync(false);
+    }
+    int dp(int d) {
+        return (int) (getResources().getDisplayMetrics().density * d + .5f);
+    }
+    List<String> pins() { return pinned; }
+    List<TendooPlaylist.Channel> quickChannels() { return channels; }
+    int currentPage() { return channelPage; }
+    private List<String> loadPins() {
+        List<String> values = new ArrayList<>();
+        String raw = prefs.getString("apps", null);
+        if (raw == null) {
+            values.add(IPTV);
+            return values;
+        }
+        try {
+            JSONArray a = new JSONArray(raw);
+            for (int i = 0; i < a.length(); i++) {
+                String p = a.optString(i, "");
+                if (!p.isEmpty() && !values.contains(p) && values.size() < PIN_LIMIT) values.add(p);
+            }
+        } catch (Exception ex) {
+            values.add(IPTV);
+        }
+        return values;
+    }
+    private void save() {
+        JSONArray a = new JSONArray();
+        for (String p : pinned) a.put(p);
+        prefs.edit().putString("apps", a.toString()).apply();
+        adapter.notifyDataSetChanged();
+    }
+    private String appName(String pkg) {
+        if (IPTV.equals(pkg)) return "IPTV Việt Nam";
+        try {
+            PackageManager pm = getPackageManager();
+            return pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString();
+        } catch (Exception ex) { return pkg; }
+    }
+    private void launchSystem(String action) {
+        try { startActivity(new Intent(action)); }
+        catch (Exception ex) {
+            Toast.makeText(this, "Thiết bị không hỗ trợ mục này", Toast.LENGTH_SHORT).show();
+        }
+    }
+    void openApp(String pkg) {
+        if (IPTV.equals(pkg)) { openChannels(); return; }
+        PackageManager pm = getPackageManager();
+        Intent target = pm.getLeanbackLaunchIntentForPackage(pkg);
+        if (target == null) target = pm.getLaunchIntentForPackage(pkg);
+        if (target == null) {
+            Toast.makeText(this, "Ứng dụng đã gỡ hoặc không khởi chạy được", Toast.LENGTH_LONG).show();
+            return;
+        }
+        try { startActivity(target); }
+        catch (Exception e) {
+            Toast.makeText(this, "Không thể mở " + appName(pkg), Toast.LENGTH_SHORT).show();
+        }
+    }
+    void openChannels() { startActivity(new Intent(this, TendooChannelsActivity.class)); }
+    void openChannel(TendooPlaylist.Channel channel) {
+        TendooPlayerActivity.open(this, channel);
+    }
+    void chooseApp() {
+        if (pinned.size() >= PIN_LIMIT) {
+            Toast.makeText(this, "Hàng 1–2 đã đầy: gỡ một ô trước.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Set<String> names = new LinkedHashSet<>();
+        if (!pinned.contains(IPTV)) names.add(IPTV);
+        PackageManager pm = getPackageManager();
+        for (String cat : new String[] {
+                Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER }) {
+            Intent query = new Intent(Intent.ACTION_MAIN).addCategory(cat);
+            for (ResolveInfo info : pm.queryIntentActivities(query, 0)) {
+                if (info.activityInfo == null) continue;
+                String pkg = info.activityInfo.packageName;
+                if (!pkg.equals(getPackageName()) && !pinned.contains(pkg)) names.add(pkg);
+            }
+        }
+        List<String> available = new ArrayList<>(names);
+        available.sort(Comparator.comparing(this::appName, String.CASE_INSENSITIVE_ORDER));
+        String[] labels = new String[available.size()];
+        for (int i = 0; i < available.size(); i++) labels[i] = appName(available.get(i));
+        if (labels.length == 0) {
+            Toast.makeText(this, "Không còn ứng dụng có thể thêm", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        new AlertDialog.Builder(this).setTitle("THÊM ỨNG DỤNG")
+                .setItems(labels, (d, i) -> {
+                    String pkg = available.get(i);
+                    if (!pinned.contains(pkg) && pinned.size() < PIN_LIMIT) {
+                        pinned.add(pkg);
+                        save();
+                    }
+                }).setNegativeButton("Hủy", null).show();
+    }
+    void editApp(String pkg) {
+        int index = pinned.indexOf(pkg);
+        if (index < 0) return;
+        String[] options = {"Chuyển sang trái", "Chuyển sang phải",
+                "Chọn vị trí", "Gỡ ô khỏi màn hình (không gỡ app)", "Mở ứng dụng"};
+        new AlertDialog.Builder(this).setTitle(appName(pkg)).setItems(options,
+                (d, which) -> {
+                    if (which == 0 && index > 0) {
+                        Collections.swap(pinned, index, index-1); save();
+                    } else if (which == 1 && index < pinned.size()-1) {
+                        Collections.swap(pinned, index, index+1); save();
+                    } else if (which == 2) {
+                        String[] choices = new String[pinned.size()];
+                        for (int n = 0; n < choices.length; n++)
+                            choices[n] = "Ô " + (n + 1) + ": " + appName(pinned.get(n));
+                        new AlertDialog.Builder(this).setTitle("CHỌN VỊ TRÍ")
+                                .setItems(choices, (dialog, newIndex) -> {
+                                    pinned.remove(index);
+                                    pinned.add(newIndex, pkg);
+                                    save();
+                                }).show();
+                    } else if (which == 3) {
+                        pinned.remove(index); save();
+                    } else if (which == 4) openApp(pkg);
+                }).setNegativeButton("Đóng", null).show();
+    }
+    void manage() {
+        new AlertDialog.Builder(this).setTitle("TÙY CHỈNH MÀN HÌNH CHÍNH")
+                .setItems(new String[]{"Thêm ứng dụng", "Sắp xếp / gỡ ứng dụng",
+                        "Xem tất cả kênh", "12 kênh tiếp theo", "12 kênh trước",
+                        "Cập nhật IPTV từ GitHub", "Cài đặt HOME mặc định"},
+                        (dialog, option) -> {
+                            switch (option) {
+                                case 0: chooseApp(); break;
+                                case 1: chooseEdit(); break;
+                                case 2: openChannels(); break;
+                                case 3: turnPage(1); break;
+                                case 4: turnPage(-1); break;
+                                case 5: sync(true); break;
+                                case 6: launchSystem(Settings.ACTION_HOME_SETTINGS); break;
+                                default: break;
+                            }
+                        }).show();
+    }
+    private void chooseEdit() {
+        String[] choices = new String[pinned.size()];
+        for (int i = 0; i < choices.length; i++) choices[i] = appName(pinned.get(i));
+        new AlertDialog.Builder(this).setTitle("CHỌN ỨNG DỤNG")
+                .setItems(choices, (d, n) -> editApp(pinned.get(n))).show();
+    }
+    private void turnPage(int step) {
+        int pages = Math.max(1, (channels.size() + 11) / 12);
+        channelPage = (channelPage + step + pages) % pages;
+        adapter.notifyItemRangeChanged(12, 12);
+        Toast.makeText(this, "Kênh xem nhanh: trang " + (channelPage + 1)
+                + "/" + pages, Toast.LENGTH_SHORT).show();
+    }
+    private void sync(boolean requested) {
+        prefs.edit().putLong("sync", System.currentTimeMillis()).apply();
+        TendooPlaylist.refresh(this, msg -> {
+            if (isFinishing() || isDestroyed()) return;
+            channels = TendooPlaylist.load(this);
+            channelPage = 0;
+            adapter.notifyItemRangeChanged(12, 12);
+            if (requested) Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        });
+    }
+    @Override protected void onResume() {
+        super.onResume();
+        if (adapter != null) adapter.notifyItemRangeChanged(0, 12);
+    }
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN
+                && (event.getKeyCode() == KeyEvent.KEYCODE_CHANNEL_UP
+                    || event.getKeyCode() == KeyEvent.KEYCODE_PAGE_DOWN)) {
+            turnPage(1); return true;
+        }
+        if (event.getAction() == KeyEvent.ACTION_DOWN
+                && (event.getKeyCode() == KeyEvent.KEYCODE_CHANNEL_DOWN
+                    || event.getKeyCode() == KeyEvent.KEYCODE_PAGE_UP)) {
+            turnPage(-1); return true;
+        }
+        return super.dispatchKeyEvent(event);
+    }
+}
