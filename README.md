@@ -21,7 +21,7 @@ M3U mẫu chứa 46 nguồn kênh Việt Nam công khai, một số luồng có 
 
 - Xem [GitHub Actions → Build lightweight IPTV Home APK](../../actions/workflows/android-apk.yml).
 - Sau khi build thành công, tải artifact `Tendoo-IPTV-Home-1.0.0-test1` hoặc xem [Releases](../../releases).
-- Đó là APK **debug dùng thử**, chưa phải bản phát hành production ký chính thức.
+- Đó là APK **release đã tối ưu R8 nhưng ký bằng khóa debug tạm thời để kiểm thử**, chưa phải bản phát hành production. Mỗi môi trường build có thể có khóa debug khác nhau; trước khi cập nhật lâu dài cần cấu hình khóa ký ổn định.
 - Tương thích mục tiêu: **Android 6.0+**, có hỗ trợ HOME intent. Không chạy trên Tizen/webOS.
 
 ## Cài làm launcher mặc định
@@ -38,11 +38,11 @@ Nếu cần khôi phục, vào **Cài đặt → Ứng dụng mặc định → 
 Yêu cầu **JDK 17, Android SDK platform 35, Gradle 8.9**.
 
 ```sh
-gradle --no-daemon :app:assembleDebug
-# APK: app/build/outputs/apk/debug/app-debug.apk
+gradle --no-daemon :app:assembleRelease
+# APK: app/build/outputs/apk/release/app-release.apk
 ```
 
-Không có runtime dependency bên thứ ba nên không kéo các bộ thư viện AndroidX/Compose/Flutter/Media3 vào APK. R8 và shrinkResources được bật cho cấu hình release. Trình phát native có kích thước nhỏ nhưng độ tương thích HLS có thể khác nhau giữa các hãng, nhất là kênh mã hóa DRM, cookie/token hoặc codec đặc thù.
+Không có runtime dependency bên thứ ba nên không kéo các bộ thư viện AndroidX/Compose/Flutter/Media3 vào APK. Bản build test phát hành dùng R8/minify và shrinkResources để giảm kích thước. Trình phát native có kích thước nhỏ nhưng độ tương thích HLS có thể khác nhau giữa các hãng, nhất là kênh mã hóa DRM, cookie/token hoặc codec đặc thù.
 
 ### Cấu trúc
 
