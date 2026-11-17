@@ -1,0 +1,48 @@
+name: Generate bundled broadcaster artwork (not APK build)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/generate_channel_logos.py'
+      - '.github/workflows/generate-iptv-logos.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: iptv-logo-pack
+  cancel-in-progress: true
+
+jobs:
+  logos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Pillow
+        run: python -m pip install Pillow==11.3.0
+      - name: Fetch and compress official station logos
+        run: python scripts/generate_channel_logos.py
+      - name: Check expected logo coverage
+        run: |
+          python - <<'PY'
+          import json
+          with open('custom/logo_pack.json',encoding='utf-8') as f:
+              logos=json.load(f)
+          assert len(logos) >= 38, f"Too few broadcaster logos: {len(logos)}"
+          for name in ['VTV1 HD','VTV2 HD','VTV3 HD','VTV4 HD','HTV7 HD','HTV9 HD']:
+              assert name in logos, "Missing core channel logo: "+name
+          print('Packaged:',len(logos),'official broadcaster images')
+          PY
+      - name: Commit generated artwork and M3U metadata
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add custom/logo_pack.json custom/logo_provenance.json playlist/vietnam.m3u
+          if ! git diff --cached --quiet; then
+            git commit -m 'Bundle actual TV broadcaster logos for offline launcher tiles'
+            git push origin HEAD:main
+          fi
