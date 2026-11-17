@@ -54,18 +54,18 @@ activity = m[home_start:home_end]
 assert 'android.intent.category.LEANBACK_LAUNCHER' in activity
 activity = activity.replace(
     'android:name=".TendooHomeActivity"',
-    'android:name=".TendooHomeActivity"\\n'
-    '            android:label="Tendoo IPTV Home"\\n'
-    '            android:icon="@drawable/tendoo_icon"\\n'
+    'android:name=".TendooHomeActivity"\n'
+    '            android:label="Tendoo IPTV Home"\n'
+    '            android:icon="@drawable/tendoo_icon"\n'
     '            android:banner="@drawable/tendoo_banner"')
 activity = activity.replace(
-    '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />\\n'
+    '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />\n'
     '            </intent-filter>',
-    '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />\\n'
-    '            </intent-filter>\\n'
-    '            <intent-filter>\\n'
-    '                <action android:name="android.intent.action.MAIN" />\\n'
-    '                <category android:name="android.intent.category.LAUNCHER" />\\n'
+    '                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />\n'
+    '            </intent-filter>\n'
+    '            <intent-filter>\n'
+    '                <action android:name="android.intent.action.MAIN" />\n'
+    '                <category android:name="android.intent.category.LAUNCHER" />\n'
     '            </intent-filter>')
 assert 'android.intent.category.LAUNCHER' in activity
 m = m[:home_start] + activity + m[home_end:]
