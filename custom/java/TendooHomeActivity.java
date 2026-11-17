@@ -183,7 +183,7 @@ public final class TendooHomeActivity extends Activity {
         String[] labels = new String[sources.size() + 1];
         labels[0] = "IPTV Việt Nam";
         for (int i = 0; i < sources.size(); i++) {
-            CharSequence name = sources.get(i).loadLabel(getPackageManager());
+            CharSequence name = sources.get(i).loadLabel(this);
             labels[i + 1] = name == null ? "HDMI / TV " + (i + 1) : name.toString();
         }
         new AlertDialog.Builder(this).setTitle("NGUỒN VÀO")
