@@ -58,3 +58,20 @@ playlist/vietnam.m3u      # Chỉnh trên GitHub không cần rebuild
 ```
 
 **Tham khảo:** [tendoodn/cleanyourtv](https://github.com/tendoodn/cleanyourtv) (fork từ [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv), MIT). Phần mã nguồn của Tendoo IPTV Home được viết mới, không sao chép mã gốc.
+
+
+---
+
+## Bản giao diện mới — 1.0.0.test2 (17/11/2026)
+
+**[TẢI APK test2](https://github.com/tendoodn/iptv/releases/download/iptv-v1.0.0-test2/Tendoo-IPTV-Home-1.0.0-test2.apk)** · [GitHub Release](https://github.com/tendoodn/iptv/releases/tag/iptv-v1.0.0-test2)
+
+- **Nền giao diện chính là CleanYourTV trong repo của anh:** nguyên layout `activity_main.xml`, font Outfit, tài nguyên UI, thanh clock/date, thanh top pill và kiểu ứng dụng tvOS; mã và tài nguyên được vendor dưới `launcher/`, giữ bản quyền trong `CLEAN_YOUR_TV_LICENSE.txt`.
+- `custom/java/`: `TendooHomeActivity` và `TendooTileAdapter` thay nội dung màn hình bằng **2 hàng ứng dụng + 2 hàng kênh**, tối đa 6 ô/hàng. Mặc định ô IPTV và dấu +; có chọn, sắp xếp, gỡ shortcut mà không gỡ app.
+- `TendooPlayerActivity`: ExoPlayer + Media3 HLS phát thích ứng, thử nguồn dự phòng `iptv-org` cùng kênh nếu nguồn chính lỗi. Khi đang xem nhấn CH± để chuyển kênh.
+- Danh sách riêng do anh chỉnh tại **https://github.com/tendoodn/iptv/edit/main/playlist/vietnam.m3u**. URL tải cố định là **https://raw.githubusercontent.com/tendoodn/iptv/main/playlist/vietnam.m3u**. Tự kiểm tra khoảng 4 giờ và có thao tác cập nhật thủ công.
+- [Báo cáo thử HTTP manifest HLS](https://github.com/tendoodn/iptv/actions/workflows/check-streams.yml): kiểm tra từ GitHub Actions, không phải phát thử trên TV. Một số kênh 403/giới hạn vùng và link chuyển tiếp có thể lỗi.
+
+**Yêu cầu máy:** dựa trên CleanYourTV, **Android TV 8.0 trở lên**. APK test2 dùng cùng package `vn.tendoo.iptv` với test1 nhưng khóa debug có thể khác, nếu báo lỗi cập nhật hãy gỡ bản test1 và cài test2. Không root và không xóa launcher gốc. Để đổi launcher, nhấn Home chọn Tendoo IPTV Home → Luôn dùng nếu firmware cho phép.
+
+**APK đã build thành công**, có chữ ký debug thử nghiệm; chưa xác minh phát thực tế trên TV Box nên không cam kết mọi kênh phát được. APK ≈1.27 MB.
