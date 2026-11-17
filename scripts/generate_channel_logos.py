@@ -87,6 +87,15 @@ def main():
         key = row["channel"]
         by_id.setdefault(key,[]).append(row)
     lines=PLAYLIST.read_text(encoding="utf-8").splitlines()
+    packed=ROOT/"custom/logo_pack.json"
+    attribution=ROOT/"custom/logo_provenance.json"
+    existing=json.loads(packed.read_text(encoding="utf-8")) if packed.exists() else {}
+    previous_sources=json.loads(attribution.read_text(encoding="utf-8")) if attribution.exists() else {}
+    # These two legitimate logos were unavailable from the primary catalog's image hosts.
+    logo_overrides={
+        "VTV9 HD": "https://i.imgur.com/QiY55sy.png",
+        "ANTV - An Ninh TV": "https://printgo.vn/uploads/file-logo/1/512x512.17e7982d313747a6a7aaef1f2568b780.ai.1.png",
+    }
     logos={}
     provenance={}
     updated=[]
@@ -102,9 +111,11 @@ def main():
         # Prefer PNG, then WebP, then other raster formats. Download and validate.
         options=sorted(options,key=lambda r:(0 if r.get("format","").upper()=="PNG" else 1,
                 0 if "wikimedia.org" in r.get("url","") else 1))
-        decoded=None
-        used=""
-        for opt in options[:5]:
+        decoded=existing.get(name)
+        used=previous_sources.get(name,{}).get("logo_url","")
+        if name in logo_overrides and not decoded:
+            options=[{"url":logo_overrides[name],"format":"PNG"}]+options
+        for opt in ([] if decoded else options[:5]):
             try:
                 raw=load_url(opt["url"])
                 im=Image.open(BytesIO(raw))
