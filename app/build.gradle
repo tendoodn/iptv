@@ -28,12 +28,7 @@ android {
     }
 }
 
-tasks.register('preparePlaylist', Copy) {
-    from file("$rootDir/playlist/vietnam.m3u")
-    into layout.buildDirectory.dir('generated/playlist-assets')
-    rename('vietnam.m3u', 'default.m3u')
-}
-android.sourceSets.main.assets.srcDirs += [file("$buildDir/generated/playlist-assets")]
-tasks.named('preBuild').configure { dependsOn tasks.named('preparePlaylist') }
+// Bundle the repository playlist directly as an APK asset; no generation task.
+android.sourceSets.main.assets.srcDirs += [file("$rootDir/playlist")]
 
 // Android SDK MediaPlayer handles HLS; zero third-party runtime dependencies.
