@@ -42,9 +42,9 @@ chmod +x gradlew
 ./gradlew --no-daemon :app:assembleRelease --stacktrace
 cd ..
 mkdir -p dist
-cp launcher/app/build/outputs/apk/release/app-release.apk   dist/Tendoo-IPTV-Home-1.0.0-test4.apk
+cp launcher/app/build/outputs/apk/release/app-release.apk   dist/Tendoo-IPTV-Home-1.0.0-test5.apk
 
-APK="dist/Tendoo-IPTV-Home-1.0.0-test4.apk"
+APK="dist/Tendoo-IPTV-Home-1.0.0-test5.apk"
 AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
 "$AAPT" dump badging "$APK" | tee dist/badging.txt
 "$AAPT" dump xmltree "$APK" AndroidManifest.xml >dist/manifest.txt
@@ -57,4 +57,4 @@ grep -E -q "^leanback-launchable-activity:.*banner='res/" dist/badging.txt
 
 sha256sum "$APK" | tee dist/SHA256SUMS.txt
 ls -lh "$APK"
-echo "VERCEL_SANDBOX_APK_BUILD_COMPLETE"
+echo "VERCEL_SANDBOX_TEST5_BUILD_COMPLETE"
