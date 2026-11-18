@@ -19,9 +19,9 @@ assert "8.5.2" in base, "Unexpected upstream Android Gradle Plugin version"
 base_gradle.write_text(base.replace("8.5.2", "8.7.3"))
 s, n = re.subn(r"applicationId providers\.gradleProperty\('launcherApplicationId'\)\.getOrElse\('com\.gathin\.tvhome'\)", "applicationId 'vn.tendoo.iptv'", s)
 assert n == 1, "Cannot find CleanYourTV applicationId"
-s, n = re.subn(r"versionCode\s+6\b", "versionCode 4", s)
+s, n = re.subn(r"versionCode\s+6\b", "versionCode 5", s)
 assert n == 1, "Cannot find original versionCode"
-s, n = re.subn(r"versionName\s+'2\.5'", "versionName '1.0.0.test4'", s)
+s, n = re.subn(r"versionName\s+'2\.5'", "versionName '1.0.0.test5'", s)
 assert n == 1, "Cannot find versionName"
 s = s.replace(
     "    testImplementation 'junit:junit:4.13.2'",
@@ -76,6 +76,20 @@ m = m.replace('    </application>', '''
         <activity android:name=".TendooPlayerActivity"
             android:exported="false" android:screenOrientation="landscape" />
     </application>''')
+# Android 11+ package visibility must permit discovery of installed TV apps.
+# Without these queries the user might see blank cards / an empty Add App picker.
+if "<queries>" not in m:
+    m = m.replace("    <application", """    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+    <application""", 1)
 manifest.write_text(m)
 
 dest = root / "launcher/app/src/main/java/com/gathin/tvhome"
