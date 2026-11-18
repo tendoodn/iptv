@@ -3,6 +3,9 @@ package com.gathin.tvhome;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.ColorDrawable;
+import android.view.ViewOutlineProvider;
+import android.graphics.Outline;
 import android.graphics.drawable.GradientDrawable;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -19,8 +22,10 @@ import java.util.List;
 final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Tile> {
     private final TendooHomeActivity host;
     private final int tileW, tileH, itemH, columns, appSlots;
+    private final TendooAppArtwork artwork;
     TendooTileAdapter(TendooHomeActivity activity) {
         host = activity;
+        artwork = new TendooAppArtwork(host);
         columns = host.columns();
         appSlots = host.appSlots();
         float density = host.getResources().getDisplayMetrics().density;
@@ -61,6 +66,14 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         params.width = tileW; params.height = tileH;
         params.gravity = android.view.Gravity.TOP | android.view.Gravity.CENTER_HORIZONTAL;
         card.setLayoutParams(params);
+        // CleanYourTV rounds the ACTUAL image card, not only its dark background.
+        // Without clipping, landscape app banners render as ugly rectangular bitmaps.
+        card.setClipToOutline(true);
+        card.setOutlineProvider(new ViewOutlineProvider() {
+            @Override public void getOutline(View v, Outline out) {
+                out.setRoundRect(0, 0, v.getWidth(), v.getHeight(), host.dp(13));
+            }
+        });
         TextView name = view.findViewById(R.id.name);
         FrameLayout.LayoutParams nameLp = (FrameLayout.LayoutParams) name.getLayoutParams();
         nameLp.width = tileW;
@@ -70,24 +83,36 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         name.setVisibility(View.GONE);
         return new Tile(view);
     }
-    private GradientDrawable background(boolean focused, int color) {
+    private GradientDrawable background(int color) {
         GradientDrawable d = new GradientDrawable();
         d.setColor(color);
-        d.setCornerRadius(host.dp(12));
-        d.setStroke(host.dp(focused ? 3 : 1),
-                focused ? Color.WHITE : 0x334D607D);
+        d.setCornerRadius(host.dp(13));
         return d;
     }
+
+    /** White tvOS focus frame drawn above artwork; unlike a background stroke,
+        it remains visible when the TV banner is opaque. */
+    private GradientDrawable focusOutline() {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(Color.TRANSPARENT);
+        d.setCornerRadius(host.dp(13));
+        d.setStroke(host.dp(3), Color.WHITE);
+        return d;
+    }
+
     private void installFocus(Tile h, int baseColor) {
-        h.card.setBackground(background(false, baseColor));
+        h.card.setBackground(background(baseColor));
+        h.card.setForeground(null);
         h.card.setOnFocusChangeListener((v, focused) -> {
-            h.card.setBackground(background(focused, focused ? 0xFF384152 : baseColor));
-            h.card.animate().scaleX(focused ? 1.075f : 1f)
-                    .scaleY(focused ? 1.075f : 1f)
-                    .setDuration(115).start();
+            h.card.setForeground(focused ? focusOutline() : null);
+            h.card.animate().cancel();
+            h.card.animate().scaleX(focused ? 1.095f : 1f)
+                    .scaleY(focused ? 1.095f : 1f)
+                    .setDuration(focused ? 150 : 105).start();
+            h.caption.animate().cancel();
             if (h.getBindingAdapterPosition() >= columns) {
                 h.caption.setVisibility(View.VISIBLE);
-                h.caption.animate().alpha(focused ? 1f : 0f).setDuration(105).start();
+                h.caption.animate().alpha(focused ? 1f : 0f).setDuration(100).start();
             }
         });
     }
@@ -96,7 +121,8 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         h.icon.setVisibility(View.GONE);
         h.label.setText("");
         h.label.setVisibility(View.GONE);
-        h.card.setBackground(background(false, 0x181A2B3B));
+        h.card.setBackground(background(0x181A2B3B));
+        h.card.setForeground(null);
         h.card.setFocusable(false);
         h.card.setOnClickListener(null);
         h.card.setOnLongClickListener(null);
@@ -106,33 +132,58 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         boolean internal = TendooHomeActivity.IPTV.equals(packageName);
         h.banner.setImageDrawable(null);
         h.icon.setImageDrawable(null);
-        h.icon.setVisibility(View.VISIBLE);
+        h.icon.setVisibility(View.GONE);
         h.banner.setVisibility(View.GONE);
         h.banner.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
         String name;
-        int color = internal ? 0xFF1E3945 : 0xFF1C1C1E;
+        int color = 0xFFF5F6F8;  // CleanYourTV-style light banner cards
+        Drawable wideBanner = null;
         if (internal) {
             name = "IPTV Việt Nam";
-            h.icon.setImageResource(R.drawable.tendoo_icon);
+            wideBanner = host.getDrawable(R.drawable.tendoo_banner);
+            color = 0xFF152941;
         } else {
             PackageManager pm = host.getPackageManager();
             try {
                 name = pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString();
-                Drawable banner = pm.getApplicationBanner(packageName);
-                if (banner != null) {
-                    h.banner.setImageDrawable(banner);
-                    h.banner.setVisibility(View.VISIBLE);
-                    h.icon.setVisibility(View.GONE);
-                } else h.icon.setImageDrawable(pm.getApplicationIcon(packageName));
             } catch (Exception e) {
                 name = packageName;
-                h.icon.setImageResource(android.R.drawable.sym_def_app_icon);
+            }
+            // Important: the activity banner is often NOT the application banner.
+            // The previous adapter only called getApplicationBanner(packageName),
+            // which made YouTube/Netflix/TV apps appear as small icon+text boxes.
+            wideBanner = artwork.banner(packageName);
+            if (wideBanner == null) {
+                Drawable icon;
+                try {
+                    icon = pm.getApplicationIcon(packageName);
+                } catch (Exception e) {
+                    icon = host.getDrawable(android.R.drawable.sym_def_app_icon);
+                }
+                // Fallback stays a 16:9 CARD: center a large original icon on a
+                // clean, light panel. Never stretch a square icon to card width.
+                h.icon.setImageDrawable(icon);
+                FrameLayout.LayoutParams lp =
+                        (FrameLayout.LayoutParams) h.icon.getLayoutParams();
+                lp.width = Math.max(host.dp(48), Math.round(tileH * 0.68f));
+                lp.height = lp.width;
+                lp.gravity = android.view.Gravity.CENTER;
+                lp.bottomMargin = 0;
+                h.icon.setLayoutParams(lp);
+                h.icon.setVisibility(View.VISIBLE);
             }
         }
-        h.label.setText(name);
-        h.label.setVisibility(h.banner.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+        if (wideBanner != null) {
+            h.banner.setImageDrawable(wideBanner);
+            h.banner.setVisibility(View.VISIBLE);
+            h.icon.setVisibility(View.GONE);
+        }
+        // Main tile remains image-first; title appears UNDER the card on focus.
+        h.label.setVisibility(View.GONE);
         h.caption.setText(name);
-        h.caption.setVisibility(h.getBindingAdapterPosition() >= columns ? View.VISIBLE : View.GONE);
+        h.caption.setVisibility(h.getBindingAdapterPosition() >= columns
+                ? View.VISIBLE : View.GONE);
         h.caption.setAlpha(0f);
         h.card.setFocusable(true);
         h.card.setOnClickListener(v -> host.openApp(packageName));
@@ -140,8 +191,10 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
         h.card.setOnKeyListener((v, keyCode, event) -> {
             if (event.getAction() == KeyEvent.ACTION_DOWN &&
                     (keyCode == KeyEvent.KEYCODE_MENU
-                        || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.getRepeatCount() == 13))) {
-                host.editApp(packageName); return true;
+                        || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+                            && event.getRepeatCount() == 13))) {
+                host.editApp(packageName);
+                return true;
             }
             return false;
         });
@@ -183,12 +236,13 @@ final class TendooTileAdapter extends RecyclerView.Adapter<TendooTileAdapter.Til
             host.openChannels(); return true;
         });
         h.card.setOnKeyListener(null);
-        installFocus(h, 0xD01C1C22);
+        installFocus(h, 0xFFF4F6FA);
     }
     @Override public void onBindViewHolder(@NonNull Tile h, int position) {
         h.card.animate().cancel();
         h.card.setScaleX(1f); h.card.setScaleY(1f);
         h.card.setOnFocusChangeListener(null);
+        h.card.setForeground(null);
         h.card.setOnClickListener(null);
         h.card.setOnLongClickListener(null);
         h.card.setOnKeyListener(null);
