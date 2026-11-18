@@ -80,7 +80,7 @@ final class TendooAppArtwork {
                 if (info.activityInfo == null) continue;
                 Drawable banner = drawableFromActivity(info.activityInfo);
                 if (validBanner(banner)) return banner;
-                banner = info.loadBanner(pm);
+                banner = info.activityInfo.loadBanner(pm);
                 if (validBanner(banner)) return banner;
             }
         } catch (Exception ignored) { }
